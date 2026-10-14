@@ -15,9 +15,9 @@ concurrency:
 
 jobs:
   # As the Octave Packages index tests a release: the Octave image with the
-  # build packages drafting needs installed first, then drafting from the
-  # index; latest is Ubuntu 26.04.  With occt set, Open CASCADE is that
-  # version, built by octave-ci, in place of Ubuntu's.
+  # build packages drafting needs installed first, then drafting and
+  # datatypes from the index; latest is Ubuntu 26.04.  With occt set, Open
+  # CASCADE is that version, built by octave-ci, in place of Ubuntu's.
   test:
     name: >-
       Linux, Octave ${{ matrix.version }}${{ matrix.occt
@@ -54,7 +54,7 @@ jobs:
                   | sed -n 's/^Name: *//p' | tr '[:upper:]' '[:lower:]')"
           echo "name=$name" >> "$GITHUB_OUTPUT"
 
-      - name: Install the build packages and drafting, then install and test
+      - name: Install the build packages, drafting and datatypes, then install and test
         shell: bash
         env:
           VERSION: ${{ matrix.version }}
@@ -67,11 +67,12 @@ jobs:
         run: |
           set -euo pipefail
           code="printf ('Octave %s\\n', version ()); "
+          code+="for p = {'drafting', 'datatypes'}; "
           code+="for a = 1:3; try; "
-          code+="pkg ('install', '-forge', '-local', 'drafting'); break; catch; "
-          code+="if (a == 3); error ('drafting could not be installed: %s', lasterr ()); endif; "
-          code+="printf ('installing drafting failed, retrying: %s\\n', lasterr ()); "
-          code+="pause (20 * a); end_try_catch; endfor; "
+          code+="pkg ('install', '-forge', '-local', p{1}); break; catch; "
+          code+="if (a == 3); error ('%s could not be installed: %s', p{1}, lasterr ()); endif; "
+          code+="printf ('installing %s failed, retrying: %s\\n', p{1}, lasterr ()); "
+          code+="pause (20 * a); end_try_catch; endfor; endfor; "
           code+="pkg ('install', '-local', '/work/package.tar.gz'); "
           code+="pkg ('load', '$NAME'); pkg ('test', '$NAME');"
           occt=()
