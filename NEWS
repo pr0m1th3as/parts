@@ -1,28 +1,33 @@
-Summary of important user-visible changes for parts 0.1.0:
+Summary of important user-visible changes for parts 0.2.0:
 -------------------------------------------------------------------
 
- ** First release.  Every function takes `'data'`, for the catalogue's
-    entries, or `'solid'`, for a `solid.Shape` of the part, plain or with
-    `'Detailed', true` its finer form.
+ This release returns the catalogues as tables, so a catalogue is searched
+ by its columns and each variable carries its unit and description.  It
+ breaks code that read the struct arrays of 0.1.0; see below.
 
- ** Bearings: `parts.bearing.deepgroove`, single row deep groove ball
-    bearings of the series 618, 619, 60 and 62.
+ ** Each variable keeps the standard's symbol as its name, such as `d`,
+    `C0` or `dk`, with its unit and description, which `summary` lists.
 
- ** Screws: `parts.screw.cap`, `lowcap`, `countersunk`,
-    `raisedcountersunk`, `button`, `pan`, `cheese`, `hex`, `shoulder` and
-    `set`, to their ISO and DIN standards, in every drive their heads come
-    with, and REYHER's articles as data.
+ ** `parts.dowel` and `parts.key` take a length with `'data'`, as
+    `parts.dowel ('data', 6, 30)` and `parts.key ('data', 20, 32)`.
 
- ** Nuts: `parts.nut.hex`, regular, thin and prevailing torque, coarse and
-    fine; `parts.nut.flange`, with a flange, plain or locking, ISO and EN.
+ ** `parts.insert.heatset` gives ruthex's article numbers.
 
- ** `parts.washer.plain`, plain washers of the normal, small and large
-    series; `parts.ring.retaining`, retaining rings for shafts and bores,
-    with their grooves.
 
- ** `parts.insert.heatset`, heat-set threaded inserts for 3D-printed parts,
-    M2 to M10, with the hole each needs.
+Backwards incompatible improvements:
 
- ** `parts.dowel`, hardened parallel pins; `parts.key`, parallel keys with
-    their keyways; `parts.material`, the properties of seven engineering
-    materials.
+ ** `'data'` returns a `table` in every part function, and
+    `parts.material` returns one, where 0.1.0 returned a struct array.
+    Text variables are cell arrays of character vectors.  Requires
+    `datatypes` 1.5.0.
+
+ ** `parts.dowel` and `parts.key` give one row per length, where 0.1.0
+    gave one entry per size with its lengths as a vector.
+
+ ** `parts.insert.heatset` gives one row per insert and maker, each with
+    that maker's own values, where 0.1.0 merged them into one entry;
+    `makers` is now `maker` and `source` holds one document.
+
+ ** `parts.material` gives one row per material and range of section
+    sizes, the range in `section`, so `parts.material (NAME)` returns every
+    range; a value the source does not give is `NaN`, where it was empty.
