@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Catalogue of Standard Machine Parts: parts.screw.cap</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+    <script type="text/javascript" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_CHTML">
+    </script>
+    <script type="text/javascript">
+      window.addEventListener("load", () => {
+        for (let i of document.querySelectorAll(".collapse ul")) {
+          let tog = document.createElement("div");
+          tog.innerHTML = i.previousSibling.textContent;
+          tog.className = "toggle";
+          tog.onclick = () => tog.classList.toggle("show");
+          i.parentElement.removeChild(i.previousSibling);
+          i.parentElement.insertBefore(tog, i);
+        }
+      });
+      // Open the collapsible demo an "#example" link points to, then scroll to
+      // it.  getElementById (not querySelector) matches ids that contain a dot,
+      // e.g. "Class.method-example1".
+      function openHashTarget () {
+        if (! window.location.hash) { return; }
+        let el = document.getElementById (
+          decodeURIComponent (window.location.hash.slice (1)));
+        if (! el) { return; }
+        if (el.classList.contains ("collapse") &&
+            ! el.classList.contains ("show")) {
+          bootstrap.Collapse.getOrCreateInstance (el).show ();
+        }
+        el.scrollIntoView ();
+      }
+      window.addEventListener ("DOMContentLoaded", openHashTarget);
+      window.addEventListener ("hashchange", openHashTarget);
+      // When the collapsible named by the current URL fragment is collapsed,
+      // drop the fragment (replaceState: no scroll, no history entry).  Otherwise
+      // the fragment would still equal this id, so clicking the same #example
+      // link again fires no "hashchange" and the example would not re-expand.
+      document.addEventListener ("hide.bs.collapse", (e) => {
+        if (e.target.id && window.location.hash === "#" + e.target.id) {
+          history.replaceState (null, "",
+            window.location.pathname + window.location.search);
+        }
+      });
+      // Let the browser's find-in-page reach the text inside a collapsed
+      // panel.  The attribute "hidden=until-found" is what makes content
+      // searchable and revealable; the style block below clears the
+      // "display: none" that would otherwise stop the attribute meaning
+      // anything, a box that is not generated having nothing to reveal.  Set
+      // it only where it is understood, which "content-visibility" is no test
+      // for, Firefox having shipped the two apart.  Where it is not, the panel
+      // keeps the user agent's plain [hidden] and the page behaves as before.
+      window.addEventListener ("DOMContentLoaded", () => {
+        if (! ("onbeforematch" in document.body)) { return; }
+        document.documentElement.classList.add ("until-found");
+        let panels = document.querySelectorAll (
+          ".collapse:not(.show):not(.navbar-collapse)");
+        for (let el of panels) {
+          el.setAttribute ("hidden", "until-found");
+          // Fired on a find-in-page hit, before the browser drops the
+          // attribute and scrolls to it.  Bootstrap keeps a panel's state in
+          // its class list, so adding the class here opens the panel in the
+          // same frame and leaves the button shutting it correctly afterwards.
+          // Bootstrap's own show () would animate against that scroll, and the
+          // attribute once dropped, "display: none" would take the panel back
+          // part way through.
+          el.addEventListener ("beforematch", () => {
+            el.classList.add ("show");
+            for (let b of document.querySelectorAll ("[data-bs-target]")) {
+              if (b.getAttribute ("data-bs-target") === "#" + el.id) {
+                b.setAttribute ("aria-expanded", "true");
+              }
+            }
+          });
+        }
+        // Drop the attribute before Bootstrap measures the panel it is opening,
+        // which it does after firing this; a revealable one measures nothing.
+        document.addEventListener ("show.bs.collapse", (e) => {
+          e.target.removeAttribute ("hidden");
+        });
+        // Restore it once the panel is shut, rather than while it is shutting.
+        document.addEventListener ("hidden.bs.collapse", (e) => {
+          if (! e.target.classList.contains ("navbar-collapse")) {
+            e.target.setAttribute ("hidden", "until-found");
+          }
+        });
+      });
+    </script>
+    <style>
+    .fs {
+    margin-top: -0.15em;
+    margin-bottom: -0.15em;
+    }
+    .fs-last {
+    margin-bottom: calc(1rem - 0.15em);
+    }
+    p.description {
+    font-family: Consolas, "Courier New", monospace;
+    }
+    p.description code {
+    font-size: inherit;
+    }
+    h6:hover {
+      color: gray;
+    }
+    code {
+    font-family: Consolas, "Courier New", monospace;
+    border-radius: 0.3em;
+    white-space: nowrap;
+    color: gray;
+    }
+    code.description {
+    font-family: Consolas, "Courier New", monospace;
+    border-radius: 0.3em;
+    white-space: normal;
+    font-size:1.2em;
+    color: gray;
+    }
+    var {
+    font-family: Consolas, "Courier New", monospace;
+    border-radius: 0.3em;
+    font-style: normal;
+    font-weight: bold;
+    color: gray;
+    }
+    td {
+      vertical-align: top;
+    }
+    [id^="togList"],                        /* HIDE CHECKBOX */
+    [id^="togList"] ~ .list,                /* HIDE LIST */
+    [id^="togList"] + label  span + span,   /* HIDE "Collapse" */
+    [id^="togList"]:checked + label span{   /* HIDE "Expand" (IF CHECKED) */
+      display:none;
+    }
+    [id^="togList"]:checked + label span + span{
+      display:inline-block;                 /* SHOW "Collapse" (IF CHECKED) */
+    }
+    [id^="togList"]:checked ~ .list{
+      display:block;                        /* SHOW LIST (IF CHECKED) */
+    }
+    /* Bootstrap hides a collapsed panel with "display: none", which generates
+       no box, so the "content-visibility: hidden" the user agent gives
+       "hidden=until-found" could never apply and the text would stay beyond
+       find-in-page.  Clear that one declaration, and only where the script
+       above has found the attribute to be understood: an attribute selector
+       matches a value the browser does not understand, so an ungated rule
+       would leave every panel of an older browser standing open.  The
+       "!important" is required rather than decoration: the reboot carries
+       "[hidden] {display: none !important}", which the attribute itself brings
+       into play, and only another "!important" can outrank it. */
+    html.until-found .collapse[hidden="until-found"]:not(.show) {
+      display: block !important;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="bg-dark">
+      <div class="container-xl">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+          <div class="container-fluid">
+            <a class="navbar-brand" href=index.html>
+              <img src="assets/parts.png" alt="parts" class="d-inline-block align-top" width="25" height="25">
+              Catalogue of Standard Machine Parts
+            </a>
+            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="index.html#Screws">
+                    <i class="fas fa-list-alt"></i>
+                    Screws
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="https://gnu-octave.github.io/packages/">
+                  <img src="assets/octave-logo.svg" alt="GNU Octave logo" class="d-inline-block align-top" width="25" height="25">
+                    Octave Packages
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="https://www.octave.org">
+                    <i class="fas fa-home"></i>
+                    GNU Octave website
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div class="container-xl my-4">
+      <div class="row flex-nowrap" style="min-height:0">
+        <div class="col-md-2 bg-light" style="overflow-y: scroll; width: 250px;">
+          <div class="p-2" style="text-align: center;">
+            <h3>Categories &</h3>
+            <h4 style="color: blue">Functions List</h4>
+          </div>
+			<div class="row">
+				<input id="togList1" type="checkbox">
+				<label for="togList1">
+					<span><h6>Bearings</h6></span>
+					<span><h6>Bearings</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.bearing.deepgroove.html" class="text-decoration-none font-monospace"><small>parts.bearing.deepgroove</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList2" type="checkbox" checked>
+				<label for="togList2">
+					<span><h6>Screws</h6></span>
+					<span><h6>Screws</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.screw.button.html" class="text-decoration-none font-monospace"><small>parts.screw.button</small></a></li>
+					<li><a href="parts.screw.cap.html" class="text-decoration-none font-monospace fw-bolder"><small>parts.screw.cap</small></a></li>
+					<li><a href="parts.screw.cheese.html" class="text-decoration-none font-monospace"><small>parts.screw.cheese</small></a></li>
+					<li><a href="parts.screw.countersunk.html" class="text-decoration-none font-monospace"><small>parts.screw.countersunk</small></a></li>
+					<li><a href="parts.screw.hex.html" class="text-decoration-none font-monospace"><small>parts.screw.hex</small></a></li>
+					<li><a href="parts.screw.lowcap.html" class="text-decoration-none font-monospace"><small>parts.screw.lowcap</small></a></li>
+					<li><a href="parts.screw.pan.html" class="text-decoration-none font-monospace"><small>parts.screw.pan</small></a></li>
+					<li><a href="parts.screw.raisedcountersunk.html" class="text-decoration-none font-monospace"><small>parts.screw.raisedcountersunk</small></a></li>
+					<li><a href="parts.screw.set.html" class="text-decoration-none font-monospace"><small>parts.screw.set</small></a></li>
+					<li><a href="parts.screw.shoulder.html" class="text-decoration-none font-monospace"><small>parts.screw.shoulder</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList3" type="checkbox">
+				<label for="togList3">
+					<span><h6>Nuts</h6></span>
+					<span><h6>Nuts</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.nut.flange.html" class="text-decoration-none font-monospace"><small>parts.nut.flange</small></a></li>
+					<li><a href="parts.nut.hex.html" class="text-decoration-none font-monospace"><small>parts.nut.hex</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList4" type="checkbox">
+				<label for="togList4">
+					<span><h6>Washers</h6></span>
+					<span><h6>Washers</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.washer.plain.html" class="text-decoration-none font-monospace"><small>parts.washer.plain</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList5" type="checkbox">
+				<label for="togList5">
+					<span><h6>Rings</h6></span>
+					<span><h6>Rings</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.ring.retaining.html" class="text-decoration-none font-monospace"><small>parts.ring.retaining</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList6" type="checkbox">
+				<label for="togList6">
+					<span><h6>Inserts</h6></span>
+					<span><h6>Inserts</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.insert.heatset.html" class="text-decoration-none font-monospace"><small>parts.insert.heatset</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList7" type="checkbox">
+				<label for="togList7">
+					<span><h6>Pins and keys</h6></span>
+					<span><h6>Pins and keys</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.dowel.html" class="text-decoration-none font-monospace"><small>parts.dowel</small></a></li>
+					<li><a href="parts.key.html" class="text-decoration-none font-monospace"><small>parts.key</small></a></li>
+				</ul>
+				</div>
+			</div>
+			<div class="row">
+				<input id="togList8" type="checkbox">
+				<label for="togList8">
+					<span><h6>Materials</h6></span>
+					<span><h6>Materials</h6></span>
+				</label>
+				<div class="list">
+				<ul style="list-style-type: none; padding-left: 20px;">
+					<li><a href="parts.material.html" class="text-decoration-none font-monospace"><small>parts.material</small></a></li>
+				</ul>
+				</div>
+			</div>
+
+			  </div>
+			  <div class="col-md-10">
+          <div class="card rounded">
+            <div class="card-header card-header-mod">
+              <div class="row d-flex flex-wrap align-items-center">
+                <h3 class="d-inline-block mr-2">
+                Function&nbsp;Reference: <b><code>parts.screw.cap</code></b>
+                </h3>
+              </div>
+            </div>
+            <div class="card-body">
+<p class="h5 fs"><code>parts: <var>C</var> = <b>parts.screw.cap</b> (<code>'data'</code>)</code></p>
+<p class="h5 fs"><code>parts: <var>C</var> = <b>parts.screw.cap</b> (<code>'data'</code>, <var>NAME</var>)</code></p>
+<p class="h5 fs"><code>parts: <var>C</var> = <b>parts.screw.cap</b> (<code>'data'</code>, <var>NAME</var>, <var>L</var>)</code></p>
+<p class="h5 fs"><code>parts: <var>S</var> = <b>parts.screw.cap</b> (<code>'solid'</code>, <var>NAME</var>, <var>L</var>)</code></p>
+<p class="h5 fs fs-last"><code>parts: &hellip; = <b>parts.screw.cap</b> (&hellip;, <var>Name</var>, <var>Value</var>)</code></p>
+<p> Socket head cap screws, ISO 4762 and ISO 14579.
+</p>
+<div class="ms-5">
+<p> <code><var>C</var> = parts.screw.cap (<code>'data'</code>)</code> returns every cap screw
+ in the catalogue as a struct array, one entry for each maker&rsquo;s article in
+ each size and length, sorted by size and length.
+ <code><var>C</var> = parts.screw.cap (<code>'data'</code>, <var>NAME</var>)</code> returns
+ those of the thread <var>NAME</var>, such as <code>'M5'</code>, and
+ <code><var>C</var> = parts.screw.cap (<code>'data'</code>, <var>NAME</var>, <var>L</var>)</code>
+ those of nominal length <var>L</var> too: every article sold as that screw,
+ each with its property class and finish.  Nothing is built.
+</p>
+<p> <code><var>S</var> = parts.screw.cap (<code>'solid'</code>, <var>NAME</var>, <var>L</var>)</code>
+ builds the screw as a <code>solid.Shape</code> whether or not anyone sells it:
+ any thread whose head the standard defines, any length.  <var>NAME</var> names
+ a coarse thread by its diameter, <code>'M5'</code>, or any pitch, as
+ <code>'M16x0.8'</code>.  The underside of the head lies on the <em class="math">xy</em>
+ plane, the head above it to <em class="math">z</em> = <var>k</var>, the shank below it to
+ <em class="math">z</em> = -<var>L</var>, the socket sunk into the head with two of its
+ corners or lobes on the <em class="math">x</em> axis.  <code><var>S</var>.Name</code> holds the
+ screw&rsquo;s designation.
+</p>
+<p> Name/Value pairs:
+</p>
+<dl compact="compact">
+<dt> <code>'Drive'</code></dt>
+<dd> The socket: <code>'hexsocket'</code> (alias <code>'allen'</code>), ISO 4762, the
+ default, or <code>'hexalobular'</code> (alias <code>'torx'</code>), ISO 14579.  For
+ <code>'data'</code> it keeps that drive&rsquo;s screws only; without it both come.</dd>
+<dt> <code>'Maker'</code></dt>
+<dd> For <code>'data'</code>: only that maker&rsquo;s articles, such as
+ <code>'REYHER'</code>, in any case.</dd>
+<dt> <code>'ThreadLength'</code></dt>
+<dd> For <code>'solid'</code>: the length of thread <var>b</var> from the end of the
+ shank, from 0 to <var>L</var>; <var>L</var> threads it to the head.  Without it the
+ thread follows Table 1 of ISO 4762 or ISO 14579, which agree: threaded
+ to the head up to the longest length the table threads so, and <var>b</var>
+ of the table from its first length with a plain shank.  A length between
+ the two takes no default and needs <code>'ThreadLength'</code>.</dd>
+<dt> <code>'Detailed'</code></dt>
+<dd> For <code>'solid'</code>: <code>true</code> builds the screw as its standard defines
+ it, slower: the fillet of radius <var>r</var> under the head, the hexalobular
+ socket&rsquo;s true outline, and the thread, cut by
+ <code>solid.Shape.thread</code>.  A thread to the head runs to within
+ <em class="math">3P</em> of it, as Table 1 allows.  By default (<code>false</code>) the shank
+ is a plain cylinder of diameter <var>d</var>, the edges are sharp and the
+ hexalobular socket is a round hole of its diameter <var>A</var>.  Either way
+ the socket is cut to its smallest depth <var>t</var>; the point is left
+ flat, its chamfer not given by the sources.</dd>
+</dl>
+
+<p> Each entry is a struct with these fields, lengths in millimetres:
+</p>
+<div class="table-responsive">
+<table class="table table-striped table-bordered table-sm">
+<tr><td width="16%"><code>designation</code></td><td width="84%">the designation of ISO 8991, as in
+ <code>'Hexagon socket head cap screw ISO 4762 - M5 x 20'</code>, without the
+ property class</td></tr>
+<tr><td width="16%"><code>standard</code></td><td width="84%"><code>'ISO 4762'</code> or <code>'ISO 14579'</code>
+ when the standard&rsquo;s table defines the screw, else empty: such a screw is
+ custom</td></tr>
+<tr><td width="16%"><code>d</code></td><td width="84%">nominal diameter</td></tr>
+<tr><td width="16%"><code>P</code></td><td width="84%">pitch, coarse</td></tr>
+<tr><td width="16%"><code>l</code></td><td width="84%">nominal length</td></tr>
+<tr><td width="16%"><code>b</code></td><td width="84%">length of thread from the end, <var>l</var> when threaded
+ to the head</td></tr>
+<tr><td width="16%"><code>dk</code></td><td width="84%">head diameter, plain head, largest</td></tr>
+<tr><td width="16%"><code>k</code></td><td width="84%">head height, largest</td></tr>
+<tr><td width="16%"><code>drive</code></td><td width="84%"><code>'hexsocket'</code> or <code>'hexalobular'</code></td></tr>
+<tr><td width="16%"><code>tool</code></td><td width="84%">the key or bit, as <code>'4'</code> or <code>'T30'</code></td></tr>
+<tr><td width="16%"><code>class</code></td><td width="84%">property class or stainless steel grade, as
+ <code>'12.9'</code> or <code>'A2-70'</code>; a grade alone, <code>'A2'</code>, where
+ the maker&rsquo;s class depends on production</td></tr>
+<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it, as
+ <code>'plain'</code> or <code>'zinc plated'</code></td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+</table>
+</div>
+
+<p> A screw is designated by its standard&rsquo;s number only when the standard&rsquo;s
+ table defines it: the size, the length and, through the length, whether
+ it is threaded to the head.  Every other screw is custom, its thread
+ length written when shorter than <var>l</var>, as
+ <code>'Hexagon socket head cap screw M5 x 60 x 22'</code>.
+</p>
+<a name="The-catalogue"></a>
+<h3 class="subheading">The catalogue</h3>
+
+<p> Articles from REYHER, <cite>The Catalogue</cite>, edition 2020.04, English,
+ pages 286 to 304 (steel), 547 to 551 (stainless steel), 402 and 121
+ (hexalobular): every article of a plain screw in sizes ISO 4762 defines,
+ M1.6 to M64, and in lengths ISO 4762 Table 1 gives a thread for.
+ Left out: the sizes M1.4, M18, M22, M27, M33 and M39, whose socket depth
+ and thread form the sources do not give; the lengths M3 x 22, M4 x 28,
+ M6 x 32, M20 x 75 and M24 x 85, which fall between Table 1&rsquo;s threaded
+ and plain shank lengths; and an M 25 x 50 printed in article 04762.810,
+ a thread ISO 261 does not have.  The two articles of 8.8FT are threaded
+ to the head at every length.  Article 00912.814, filed under DIN 912,
+ is the ISO 14579 screw by REYHER&rsquo;s own note.
+</p>
+<p> Heads, sockets and thread lengths from ISO 4762:2004 Table 1, read in
+ IS 2269:2006, which agrees with REYHER&rsquo;s <cite>Technical Information</cite>
+ (2019, TI-12).  Hexalobular heads and thread lengths from TI-12, socket
+ numbers and depths from DIN EN ISO 14579:2011 as reproduced by fasten.it
+ and fasteners.eu, which agree; its lengths and thread form from
+ ISO 14579:2011, read in GOST R ISO 14579-2015, which agrees with
+ GOST R ISO 14579-2009 and fasteners.eu.
+</p>
+<p> <strong>See also: </strong>
+  <a href="parts.bearing.deepgroove.html">parts.bearing.deepgroove</a>, 
+  <a href="parts.dowel.html">parts.dowel</a>, 
+  <a href="parts.key.html">parts.key</a>
+</p>
+<p><strong>Source Code: </strong>
+  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+screw/cap.m">parts.screw.cap</a>
+</p>
+</div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
