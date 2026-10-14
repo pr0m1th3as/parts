@@ -13,15 +13,15 @@ parts.bearing.deepgroove
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 2262
+# length: 2332
 parts: B = parts.bearing.deepgroove ('data')
 parts: B = parts.bearing.deepgroove ('data', DESIGNATION)
 parts: S = parts.bearing.deepgroove ('solid', DESIGNATION)
 Single row deep groove ball bearings from the catalogue.
 
 B = parts.bearing.deepgroove ('data') returns every
-bearing in the catalogue as a struct array, sorted by bore, then outside
-diameter, then width.
+bearing in the catalogue as a table, one row per bearing, sorted by bore,
+then outside diameter, then width.
 B = parts.bearing.deepgroove ('data',
 DESIGNATION) returns the one bearing named, such as '6205'
 or '61930 MA'. Nothing is built.
@@ -40,7 +40,8 @@ of diameter Dw = min (0.3*(D - d), 0.8*B) on the pitch circle
 rings are rounded to r. It shows the bearing; it does not stand
 for the maker's internal design.
 
-Each bearing is a struct with these fields, lengths in millimetres, loads
+The table has these variables, each with its unit and its description,
+which summary (B) lists; lengths are in millimetres, loads
 in newtons:
 
 designation the designation, as SKF prints it
@@ -93,18 +94,20 @@ parts.dowel
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 1579
+# length: 1719
 parts: P = parts.dowel ('data')
 parts: P = parts.dowel ('data', D)
+parts: P = parts.dowel ('data', D, L)
 parts: S = parts.dowel ('solid', D, L)
 parts: S = parts.dowel (..., Name, Value)
 Parallel dowel pins to ISO 8734, hardened.
 
-P = parts.dowel ('data') returns every diameter in
-the catalogue as a struct array, smallest first.
-P = parts.dowel ('data', D) returns the one of
-diameter D millimetres, with the lengths in stock. Nothing is
-built.
+P = parts.dowel ('data') returns every pin in the
+catalogue as a table, one row for each diameter and length in stock,
+smallest first. P = parts.dowel ('data', D)
+returns the pins of diameter D millimetres, one for each length in
+stock, and P = parts.dowel ('data', D,
+L) the one L long. Nothing is built.
 
 S = parts.dowel ('solid', D, L) builds
 the pin of diameter D as a solid.Shape L long, whether
@@ -117,14 +120,15 @@ Name/Value pairs:
 For 'solid': true chamfers both ends c along the axis
 at 15 degrees. By default (false) the pin is a plain cylinder.
 
-Each diameter is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (P) lists; lengths are in millimetres:
 
 d nominal diameter, toleranced m6
-c the chamfer at each end, approximate
-l the lengths in stock, a row vector
-maker the maker
-article the maker's article number
-source the catalogue and page the pin was read from
+l length
+c chamfer at each end, approximate
+maker maker
+article maker's article number
+source catalogue and pages the pin was read from
 
 The catalogue
 
@@ -163,7 +167,7 @@ parts.insert.heatset
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4535
+# length: 4645
 parts: C = parts.insert.heatset ('data')
 parts: C = parts.insert.heatset ('data', NAME)
 parts: C = parts.insert.heatset ('data', NAME, L)
@@ -173,8 +177,8 @@ Heat-set threaded inserts: knurled brass inserts with a metric thread,
 pressed hot into a hole in a 3D-printed or other thermoplastic part.
 
 C = parts.insert.heatset ('data') returns every insert
-in the catalogue as a struct array, one entry for each insert, sorted by
-thread, length and outside diameter.
+in the catalogue as a table, one row for each insert and maker that sells
+it, sorted by thread, length and outside diameter.
 C = parts.insert.heatset ('data', NAME) returns
 those of the thread NAME, as 'M4', and
 C = parts.insert.heatset ('data', NAME, L)
@@ -188,18 +192,19 @@ enters, on the xy plane, the insert below it to z =
 drilled along -z, it sits flush with the surface, as it is set.
 S.Name holds the designation, as
 'Heat-set insert M4 x 8.1'. Only inserts in the catalogue are
-built.
+built, to ruthex's dimensions where ruthex sells the insert, else to CNC
+Kitchen's.
 
 No function cuts or sizes the hole, here or in drafting: a printed
 hole comes out a different size with each printer, material and setting,
-so the designer makes it. The entry's d3 is the makers'
-recommendation to start from; its t and w are the depth and
-wall the part must leave for the insert.
+so the designer makes it. A row's d3 is its maker's recommendation
+to start from; its t and w are the depth and wall the part
+must leave for the insert.
 
 Name/Value pairs:
 
 'Maker'
-For 'data': only the inserts that maker sells, 'ruthex' or
+For 'data': only that maker's rows, 'ruthex' or
 'CNC Kitchen', in any case.
 'Diameter'
 Only the insert of that outside diameter d1. Two inserts are M3 x
@@ -212,23 +217,25 @@ default (false) the insert has its outline, the bands plain at
 d1, a groove after each and the pilot, with a bore of the thread's
 nominal diameter.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
 designation thread by length, as 'M4 x 8.1',
 and by outside diameter between them where two inserts share both, as
 'M3 x 5 x 4'
-thread the thread, as 'M4'
+thread thread, as 'M4'
 d nominal diameter of the thread
 L length, nominal
 d1 outside diameter, over the knurl
-d2 diameter of the pilot at the lower end; NaN where
-no maker gives one
-d3 diameter of the hole the makers recommend
+d2 diameter of the pilot at the lower end; NaN
+where the maker gives none
+d3 diameter of the hole the maker recommends
 t depth of a blind hole, smallest: L + 1
 w wall round the hole, smallest
-makers the makers who sell the insert, as a cell array
-source the documents the insert was read from, one for
-each maker, as a cell array
+maker maker
+article maker's article number; empty where the maker's
+document gives none
+source document the insert was read from
 
 The form
 
@@ -258,20 +265,20 @@ of teeth.
 
 The catalogue
 
-Every insert ruthex or CNC Kitchen sells with a metric thread. The values
-are ruthex's where it sells the insert, CNC Kitchen's otherwise, but for
-the wall, which is the larger of the two. Where both sell an insert they
-agree, except that CNC Kitchen recommends holes 0.1 larger from M4 to M8,
-gives M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3
-x 5 x 4 a wall of 1.6 against 1.3.
+Every insert ruthex or CNC Kitchen sells with a metric thread, a row for
+each maker with its own values. Where both sell an insert they agree,
+except that CNC Kitchen recommends holes 0.1 larger from M4 to M8, gives
+M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3 x 5
+x 4 a wall of 1.6 against 1.3.
 
 ruthex: the RX series product data sheet, metric ISO thread, status
-15.08.2022, page 1, for every insert but two sold since, read from the
-drawings on their packets as ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8)
-and M10 x 12.7 (RX-M10x12.7).
+15.08.2022, page 1, dimensions and order numbers, for every insert but two
+sold since, read from the drawings and item numbers on their packets as
+ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8) and M10 x 12.7
+(RX-M10x12.7).
 
 CNC Kitchen: Dimensions & Design Guidelines, metric inserts, June
-2025. It gives no pilot diameter.
+2025. It gives no pilot diameter and no article numbers.
 
 The depth of a blind hole, L + 1, is drawn by both. The proportions
 of the form come from the makers' own published STEP models,
@@ -300,19 +307,22 @@ parts.key
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 1854
+# length: 2058
 parts: K = parts.key ('data')
 parts: K = parts.key ('data', DS)
+parts: K = parts.key ('data', DS, L)
 parts: S = parts.key ('solid', DS, L)
 parts: S = parts.key (..., Name, Value)
 Parallel keys to DIN 6885-1, form A.
 
 K = parts.key ('data') returns every key in the
-catalogue as a struct array, smallest first.
-K = parts.key ('data', DS) returns the key for
-a shaft of diameter DS millimetres, over 6 up to 85. A shaft on the
-boundary of two rows takes the smaller key, as the table's ranges run over
-one diameter up to the next. Nothing is built.
+catalogue as a table, one row for each section and standard length,
+smallest first. K = parts.key ('data', DS)
+returns the keys for a shaft of diameter DS millimetres, over 6 up
+to 85, one for each standard length, and K = parts.key
+('data', DS, L) the one L long. A shaft on
+the boundary of two rows takes the smaller key, as the table's ranges run
+over one diameter up to the next. Nothing is built.
 
 S = parts.key ('solid', DS, L) builds the
 key for that shaft as a solid.Shape L long, whether or not
@@ -327,16 +337,18 @@ For 'solid': true chamfers the edges round the top and the
 bottom face by the smallest s. By default (false) the edges
 are sharp.
 
-Each key is a struct with these fields, in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (K) lists; all in millimetres:
 
-shaft the shaft diameters it serves, over the first up
-to the second
+shaft shaft diameters served, over the first up to the
+second, two columns
 b width
 h height
+l length
 t1 depth of the keyway in the shaft
 t2 depth of the keyway in the hub, over the shaft
-s the chamfer of the edges, smallest and largest
-l the standard lengths, a row vector
+s chamfer of the edges, smallest and largest, two
+columns
 
 The catalogue
 
@@ -375,35 +387,38 @@ parts.material
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 2993
+# length: 3143
 parts: M = parts.material ()
 parts: M = parts.material (NAME)
 parts: M = parts.material (NAME, SIZE)
 Properties of the materials parts are made of.
 
 M = parts.material () returns every material in the catalogue
-as a struct array. M = parts.material (NAME) returns the
-one named, such as 'C45'. For a metal, whose strength depends on
-the size of the section, M = parts.material (NAME,
-SIZE) returns the strength for a section SIZE millimetres
-across, the diameter of a bar or the thickness of a plate; without
-SIZE it returns the smallest section's.
+as a table, one row for each material and range of section sizes. A
+metal's strength depends on the size of the section, the diameter of a bar
+or the thickness of a plate, so its source tabulates it by ranges, a row
+each; a polymer's does not, and it has one row. M =
+parts.material (NAME) returns the rows of the one named, such as
+'C45', and M = parts.material (NAME,
+SIZE) the one row for a section SIZE millimetres across.
 
-Each material is a struct with these fields, stresses in megapascals:
+The table has these variables, each with its unit and its description,
+which summary (M) lists; stresses are in megapascals:
 
-name the name it is asked for by
+name name it is asked for by
 class 'metal', 'machined polymer' or
 'printed polymer'
+section sizes of section the row holds for, over the
+first up to the second, two columns; 0 to Inf for a polymer
 E Young's modulus
 nu Poisson's ratio
 Rp yield strength, 0.2 per cent proof stress or tensile
-stress at yield; empty where the source gives none
-Rm tensile strength; empty where the source gives none
-A elongation at break, per cent; empty where the source
-gives none
+stress at yield; NaN where the source gives none
+Rm tensile strength; NaN where the source gives
+none
+A elongation at break, per cent; NaN where the
+source gives none
 rho density, kilograms per cubic metre
-sizes for a metal, the rows [up to, Rp, Rm,
-A] the strength is tabulated in; empty for a polymer
 source where the values come from
 
 Values are minimums where the source states minimums. A printed polymer
@@ -465,7 +480,7 @@ parts.nut.flange
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4464
+# length: 4489
 parts: C = parts.nut.flange ('data')
 parts: C = parts.nut.flange ('data', NAME)
 parts: S = parts.nut.flange ('solid', NAME)
@@ -477,8 +492,8 @@ fine thread ISO 12125, and all-metal, ISO 7044 and with a fine thread ISO
 and 1664.
 
 C = parts.nut.flange ('data') returns every flange
-nut in the catalogue as a struct array, one entry for each maker's
-article in each size, sorted by size and pitch.
+nut in the catalogue as a table, one row for each maker's article in
+each size, sorted by size and pitch.
 C = parts.nut.flange ('data', NAME) returns
 those of the thread NAME, a coarse thread as 'M10' or a fine
 one as 'M10x1.25': every article sold as that nut, each with its
@@ -518,12 +533,13 @@ dc across and c thick under a hexagonal prism, with a bore of
 diameter d. A prevailing torque nut is the hexagon h high in
 both; the standards leave the form of its locking part to the maker.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation, as in
+designation designation, as in
 'Hexagon nut EN 1661 - M12', without the property class
-standard the standard when its table defines the nut,
-else empty: such a nut is custom
+standard standard when its table defines the nut, else
+empty: such a nut is custom
 d nominal diameter
 P pitch
 s width across flats, nominal
@@ -539,10 +555,10 @@ grade product grade, 'A' up to M16,
 'B' above
 class property class or material, as '8' or
 'A2'
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A nut is designated by its standard's number when the standard's table
 defines its thread. Any other is custom, a nut with a fine thread that
@@ -589,7 +605,7 @@ parts.nut.hex
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4137
+# length: 4162
 parts: C = parts.nut.hex ('data')
 parts: C = parts.nut.hex ('data', NAME)
 parts: S = parts.nut.hex ('solid', NAME)
@@ -599,8 +615,8 @@ ISO 4035 and with a fine thread ISO 8675, and prevailing torque nuts with
 a non-metallic insert, regular, ISO 7040, and thin, ISO 10511.
 
 C = parts.nut.hex ('data') returns every hexagon nut
-in the catalogue as a struct array, one entry for each maker's article in
-each size, sorted by size and pitch.
+in the catalogue as a table, one row for each maker's article in each
+size, sorted by size and pitch.
 C = parts.nut.hex ('data', NAME) returns those
 of the thread NAME, a coarse thread as 'M10' or a fine one
 as 'M10x1.25': every article sold as that nut, each with its
@@ -636,12 +652,13 @@ hexagonal prism with a bore of diameter d. A prevailing torque
 nut is the hexagon h high in both; the standards leave the form of
 its collar and insert to the maker.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon regular nut ISO 4032 - M12', without the property class
-standard the standard when its table defines the nut,
-else empty: such a nut is custom
+standard standard when its table defines the nut, else
+empty: such a nut is custom
 d nominal diameter
 P pitch
 s width across flats, nominal
@@ -655,11 +672,11 @@ grade product grade, 'A' up to M16, 'B'
 above
 class property class or material, as '8',
 'A4-70' or 'brass'
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'hot dip galvanized'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A nut is designated by its standard's number when the standard's table
 defines its thread. Any other is custom, a prevailing torque nut with a
@@ -709,7 +726,7 @@ parts.ring.retaining
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 3731
+# length: 3760
 parts: C = parts.ring.retaining ('data')
 parts: C = parts.ring.retaining ('data', D1)
 parts: S = parts.ring.retaining ('solid', D1)
@@ -718,8 +735,8 @@ Retaining rings, with the grooves they sit in: for shafts, DIN 471, and
 for bores, DIN 472, each of the normal and the heavy type.
 
 C = parts.ring.retaining ('data') returns every
-retaining ring in the catalogue as a struct array, one entry for each
-maker's article in each size, sorted by diameter.
+retaining ring in the catalogue as a table, one row for each maker's
+article in each size, sorted by diameter.
 C = parts.ring.retaining ('data', D1) returns
 those for a shaft or bore of diameter D1: every article sold as
 that ring, each with its material and finish, and the groove to cut for
@@ -755,9 +772,10 @@ lugs or the gap, which the standards leave to the maker, so these are a
 modelling choice. By default (false) the ring is a flat ring
 b wide on d3, without a gap.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of the standard, as in
+designation designation of the standard, as in
 'Retaining ring DIN 471 - 50 x 2'
 standard 'DIN 471' or 'DIN 472'
 type 'normal' or 'heavy'
@@ -778,11 +796,11 @@ n distance from the groove to the end of the shaft or
 bore, smallest
 material 'spring steel' or a stainless steel
 by its number, as '1.4122'
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'zinc flake'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 The catalogue
 
@@ -823,7 +841,7 @@ parts.screw.button
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4159
+# length: 4184
 parts: C = parts.screw.button ('data')
 parts: C = parts.screw.button ('data', NAME)
 parts: C = parts.screw.button ('data', NAME, L)
@@ -833,8 +851,8 @@ Hexagon socket button head screws, ISO 7380-1, and with collar,
 ISO 7380-2.
 
 C = parts.screw.button ('data') returns every button
-head screw in the catalogue as a struct array, one entry for each maker's
-article in each size and length, sorted by size and length.
+head screw in the catalogue as a table, one row for each maker's article
+in each size and length, sorted by size and length.
 C = parts.screw.button ('data', NAME) returns
 those of the thread NAME, such as 'M5', and
 C = parts.screw.button ('data', NAME, L)
@@ -878,9 +896,10 @@ bearing face; its radius follows from the two, the standards giving
 rf for reference and leaving the contour to the maker. The collar
 is dc across and c high.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon socket button head screw ISO 7380-1 - M5 x 20', without
 the property class
 standard 'ISO 7380-1' or 'ISO 7380-2'
@@ -894,13 +913,13 @@ dk head diameter, largest
 dc collar diameter, largest; NaN without a collar
 k head height, the collar included, largest
 drive 'hexsocket'
-tool the hexagon key, across flats, as '3'
+tool hexagon key, across flats, as '3'
 class property class or material, as REYHER prints it:
 '010.9' marks the reduced loadability of the head
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by the standard's number when its table defines it:
 a length of the size's commercial range with the thread form the table
@@ -944,7 +963,7 @@ parts.screw.cap
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4784
+# length: 4809
 parts: C = parts.screw.cap ('data')
 parts: C = parts.screw.cap ('data', NAME)
 parts: C = parts.screw.cap ('data', NAME, L)
@@ -953,8 +972,8 @@ parts: ... = parts.screw.cap (..., Name, Value)
 Socket head cap screws, ISO 4762 and ISO 14579.
 
 C = parts.screw.cap ('data') returns every cap screw
-in the catalogue as a struct array, one entry for each maker's article in
-each size and length, sorted by size and length.
+in the catalogue as a table, one row for each maker's article in each
+size and length, sorted by size and length.
 C = parts.screw.cap ('data', NAME) returns
 those of the thread NAME, such as 'M5', and
 C = parts.screw.cap ('data', NAME, L)
@@ -998,9 +1017,10 @@ hexalobular socket is a round hole of its diameter A. Either way
 the socket is cut to its smallest depth t; the point is left
 flat, its chamfer not given by the sources.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon socket head cap screw ISO 4762 - M5 x 20', without the
 property class
 standard 'ISO 4762' or 'ISO 14579'
@@ -1014,15 +1034,15 @@ to the head
 dk head diameter, plain head, largest
 k head height, largest
 drive 'hexsocket' or 'hexalobular'
-tool the key or bit, as '4' or 'T30'
+tool key or bit, as '4' or 'T30'
 class property class or stainless steel grade, as
 '12.9' or 'A2-70'; a grade alone, 'A2', where
 the maker's class depends on production
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'zinc plated'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by its standard's number only when the standard's
 table defines it: the size, the length and, through the length, whether
@@ -1076,7 +1096,7 @@ parts.screw.cheese
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4106
+# length: 4131
 parts: C = parts.screw.cheese ('data')
 parts: C = parts.screw.cheese ('data', NAME)
 parts: C = parts.screw.cheese ('data', NAME, L)
@@ -1085,8 +1105,8 @@ parts: ... = parts.screw.cheese (..., Name, Value)
 Cheese head screws: slotted, ISO 1207, and hexalobular socket, ISO 14580.
 
 C = parts.screw.cheese ('data') returns every cheese
-head screw in the catalogue as a struct array, one entry for each maker's
-article in each size and length, sorted by size and length.
+head screw in the catalogue as a table, one row for each maker's article
+in each size and length, sorted by size and length.
 C = parts.screw.cheese ('data', NAME) returns
 those of the thread NAME, such as 'M5', and
 C = parts.screw.cheese ('data', NAME, L)
@@ -1129,9 +1149,10 @@ of diameter d and the hexalobular socket a round hole of its
 diameter A. Either way the slot is cut n wide, the socket or
 slot is cut t min deep, and the end is left flat, as rolled.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Cheese head screw ISO 1207 - M5 x 20', without the property
 class
 standard 'ISO 1207' or 'ISO 14580'
@@ -1145,15 +1166,15 @@ to the head
 dk head diameter at the bearing face, largest
 k head height, largest
 drive 'slot' or 'hexalobular'
-tool the screwdriver tip of ISO 2380-1, thickness by
+tool screwdriver tip of ISO 2380-1, thickness by
 width, as '1.2 x 8'; empty for M1.6 to M3, which the source does
 not assign
 class property class or material, as '4.8',
 'A2', 'brass' or 'PA'
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by the standard's number when its table defines it:
 a length of the size's commercial range, with the thread form the table
@@ -1197,7 +1218,7 @@ parts.screw.countersunk
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 5686
+# length: 5707
 parts: C = parts.screw.countersunk ('data')
 parts: C = parts.screw.countersunk ('data', NAME)
 parts: C = parts.screw.countersunk ('data', NAME, L)
@@ -1206,8 +1227,8 @@ parts: ... = parts.screw.countersunk (..., Name, Value)
 Countersunk head screws, ISO 10642, 2009, 7046 and 14581.
 
 C = parts.screw.countersunk ('data') returns every
-countersunk head screw in the catalogue as a struct array, one entry for
-each maker's article in each size and length, sorted by size and length.
+countersunk head screw in the catalogue as a table, one row for each
+maker's article in each size and length, sorted by size and length.
 C = parts.screw.countersunk ('data', NAME)
 returns those of the thread NAME, such as 'M5', and
 C = parts.screw.countersunk ('data', NAME,
@@ -1266,12 +1287,13 @@ theoretical diameter dkt at the top, cut by a cylinder of the
 actual head diameter dk: the edge, which the standards let be flat
 or rounded, is that cylinder.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon socket countersunk head screw ISO 10642 - M5 x 20',
 without the property class, a cross recess's type after the size
-standard the standard when its table defines the screw,
+standard standard when its table defines the screw,
 else empty: such a screw is custom
 d nominal diameter
 P pitch, coarse
@@ -1284,15 +1306,15 @@ top, d + 2k: the diameter a countersink is made to
 k head height, largest
 drive 'hexsocket', 'slot',
 'crossH', 'crossZ' or 'hexalobular'
-tool the key, bit or tip, as '3',
+tool key, bit or tip, as '3',
 'PH2', 'T25' or '1.2 x 6.5'
 class property class or material, as REYHER prints it:
 '08.8' and '010.9' mark the reduced loadability of
 ISO 10642's head
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by its standard's number when its table defines it:
 a length of the size's commercial range with the thread form the table
@@ -1344,7 +1366,7 @@ parts.screw.hex
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 5012
+# length: 5037
 parts: C = parts.screw.hex ('data')
 parts: C = parts.screw.hex ('data', NAME)
 parts: C = parts.screw.hex ('data', NAME, L)
@@ -1358,8 +1380,8 @@ fine thread, ISO 8765); a screw is threaded to the head (ISO 4017; with a
 fine thread, ISO 8676).
 
 C = parts.screw.hex ('data') returns every hexagon
-head bolt and screw in the catalogue as a struct array, one entry for each
-maker's article in each size and length, sorted by size, pitch and length.
+head bolt and screw in the catalogue as a table, one row for each maker's
+article in each size and length, sorted by size, pitch and length.
 C = parts.screw.hex ('data', NAME) returns
 those of the thread NAME, a coarse thread as 'M10' or a fine
 one as 'M10x1.25', and
@@ -1408,13 +1430,14 @@ starts at the smallest circle ISO 4162 allows, 0.85 s, and its
 flange rises at 25 degrees from c thick at dw; its fillet
 and the bearing face's slight cone are left out.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon head bolt ISO 4014 - M12 x 80', without the property
 class
-standard the standard when its table defines the bolt
-or screw, else empty: such a one is custom
+standard standard when its table defines the bolt or
+screw, else empty: such a one is custom
 d nominal diameter
 P pitch
 l nominal length
@@ -1425,11 +1448,11 @@ k head height, nominal
 grade product grade, 'A' or 'B'
 class property class or steel grade, as '8.8',
 'A4-70' or '25CrMo4'
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'hot dip galvanized'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A bolt is designated by its standard's number when the standard's table
 defines it: the size, a length of its commercial range and the thread
@@ -1480,7 +1503,7 @@ parts.screw.lowcap
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 3394
+# length: 3419
 parts: C = parts.screw.lowcap ('data')
 parts: C = parts.screw.lowcap ('data', NAME)
 parts: C = parts.screw.lowcap ('data', NAME, L)
@@ -1489,8 +1512,8 @@ parts: ... = parts.screw.lowcap (..., Name, Value)
 Hexagon socket head cap screws with low head, DIN 7984.
 
 C = parts.screw.lowcap ('data') returns every low
-head cap screw in the catalogue as a struct array, one entry for each
-maker's article in each size and length, sorted by size and length.
+head cap screw in the catalogue as a table, one row for each maker's
+article in each size and length, sorted by size and length.
 C = parts.screw.lowcap ('data', NAME) returns
 those of the thread NAME, such as 'M8', and
 C = parts.screw.lowcap ('data', NAME, L)
@@ -1524,11 +1547,12 @@ the standard puts its last full thread. By default (false) the
 shank is a plain cylinder of diameter d. Either way the socket is
 s across flats and t min deep, and the end is left flat.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation, as in
-'Hexagon socket head cap screw with low head DIN 7984 - M8 x
-20', without the property class
+designation designation, as in
+"Hexagon socket head cap screw with low head DIN 7984 - M8 x
+20", without the property class
 standard 'DIN 7984' when its table defines the
 screw, else empty: such a screw is custom
 d nominal diameter
@@ -1539,13 +1563,13 @@ to the head
 dk head diameter, largest
 k head height, largest
 drive 'hexsocket'
-tool the hexagon key, as '5'
+tool hexagon key, as '5'
 class property class, as the maker marks it: a leading
 0, as in '08.8', marks the reduced loadability of the low head
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by the standard's number when its table defines it:
 a length of the size's commercial range with the thread form the table
@@ -1585,7 +1609,7 @@ parts.screw.pan
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4083
+# length: 4104
 parts: C = parts.screw.pan ('data')
 parts: C = parts.screw.pan ('data', NAME)
 parts: C = parts.screw.pan ('data', NAME, L)
@@ -1594,8 +1618,8 @@ parts: ... = parts.screw.pan (..., Name, Value)
 Pan head screws, ISO 1580, 7045 and 14583.
 
 C = parts.screw.pan ('data') returns every pan head
-screw in the catalogue as a struct array, one entry for each maker's
-article in each size and length, sorted by size and length.
+screw in the catalogue as a table, one row for each maker's article in
+each size and length, sorted by size and length.
 C = parts.screw.pan ('data', NAME) returns
 those of the thread NAME, such as 'M5', and
 C = parts.screw.pan ('data', NAME, L)
@@ -1643,12 +1667,13 @@ and ISO 14583's a dome of radius rf on a side dk across, the
 blend between them, which no standard dimensions, left sharp. ISO 14583
 gives the same dk, k and rf as ISO 7045.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Pan head screw ISO 7045 - M5 x 20 - Z', without the property
 class, a cross recess's type after the size
-standard the standard when its table defines the screw,
+standard standard when its table defines the screw,
 else empty: such a screw is custom
 d nominal diameter
 P pitch, coarse
@@ -1659,13 +1684,13 @@ dk head diameter, largest
 k head height, largest
 drive 'slot', 'crossH',
 'crossZ' or 'hexalobular'
-tool the bit or tip, as 'PH2', 'T25' or
+tool bit or tip, as 'PH2', 'T25' or
 '1.2 x 8'
 class property class or material
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by its standard's number when its table defines it:
 a length of the size's commercial range with the thread form the table
@@ -1708,7 +1733,7 @@ parts.screw.raisedcountersunk
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 4742
+# length: 4763
 parts: C = parts.screw.raisedcountersunk ('data')
 parts: C = parts.screw.raisedcountersunk ('data', NAME)
 parts: C = parts.screw.raisedcountersunk ('data', NAME, L)
@@ -1717,9 +1742,9 @@ parts: ... = parts.screw.raisedcountersunk (..., Name, Value)
 Raised countersunk head screws, ISO 2010, 7047 and 14584.
 
 C = parts.screw.raisedcountersunk ('data') returns
-every raised countersunk head screw in the catalogue as a struct array,
-one entry for each maker's article in each size and length, sorted by
-size and length.
+every raised countersunk head screw in the catalogue as a table, one row
+for each maker's article in each size and length, sorted by size and
+length.
 C = parts.screw.raisedcountersunk ('data', NAME)
 returns those of the thread NAME, such as 'M5', and
 C = parts.screw.raisedcountersunk ('data', NAME,
@@ -1772,12 +1797,13 @@ dk and rises f; its radius, which the standards give as
 approximate, follows from the two. Drives are cut from the top of the
 dome, from which their depths are measured.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Countersunk raised head screw ISO 7047 - M5 x 20 - H', without
 the property class, a cross recess's type after the size
-standard the standard when its table defines the screw,
+standard standard when its table defines the screw,
 else empty: such a screw is custom
 d nominal diameter
 P pitch, coarse
@@ -1792,13 +1818,13 @@ k height of the cone, largest
 f height of the dome above the edge, approximate
 drive 'slot', 'crossH',
 'crossZ' or 'hexalobular'
-tool the bit or tip, as 'PH2', 'T25'
+tool bit or tip, as 'PH2', 'T25'
 or '1.2 x 6.5'
 class property class or material
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by its standard's number when its table defines it:
 a length of the size's commercial range with the thread form the table
@@ -1841,7 +1867,7 @@ parts.screw.set
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 3962
+# length: 3983
 parts: C = parts.screw.set ('data')
 parts: C = parts.screw.set ('data', NAME)
 parts: C = parts.screw.set ('data', NAME, L)
@@ -1850,8 +1876,8 @@ parts: ... = parts.screw.set (..., Name, Value)
 Hexagon socket set screws, ISO 4026, 4027, 4028 and 4029.
 
 C = parts.screw.set ('data') returns every set screw
-in the catalogue as a struct array, one entry for each maker's article in
-each size and length, sorted by size, pitch and length.
+in the catalogue as a table, one row for each maker's article in each
+size and length, sorted by size, pitch and length.
 C = parts.screw.set ('data', NAME) returns
 those of the thread NAME, such as 'M6' or 'M8x1',
 and C = parts.screw.set ('data', NAME, L)
@@ -1902,12 +1928,13 @@ cup
 A 45 degree chamfer down to an edge dz across, round a conical cup of
 120 degrees.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon socket set screw ISO 4029 - M6 x 12', without the
 property class
-standard the standard, as 'ISO 4029', when its
+standard standard, as 'ISO 4029', when its
 table defines the screw, else empty: such a screw is custom
 d nominal diameter
 P pitch
@@ -1915,15 +1942,15 @@ l nominal length
 point 'flat', 'cone', 'dog' or
 'cup'
 drive 'hexsocket'
-tool the hexagon key, as '3'
+tool hexagon key, as '3'
 class property class or stainless steel grade, as
 '45H' or 'A4'; 'A1/A2' where the maker sells
 either
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'zinc plated'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by its standard's number when the standard's table
 defines it: a coarse thread and a length of the table's commercial range.
@@ -1966,7 +1993,7 @@ parts.screw.shoulder
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 3590
+# length: 3615
 parts: C = parts.screw.shoulder ('data')
 parts: C = parts.screw.shoulder ('data', DS)
 parts: C = parts.screw.shoulder ('data', DS, L)
@@ -1978,8 +2005,8 @@ A shoulder screw is sized by its shoulder: diameter DS and length
 L, from the underside of the head to the end of the shoulder.
 
 C = parts.screw.shoulder ('data') returns every
-shoulder screw in the catalogue as a struct array, one entry for each
-maker's article in each size and length, sorted by shoulder diameter and
+shoulder screw in the catalogue as a table, one row for each maker's
+article in each size and length, sorted by shoulder diameter and
 length. C = parts.screw.shoulder ('data', DS)
 returns those of shoulder diameter DS, and
 C = parts.screw.shoulder ('data', DS, L)
@@ -2011,9 +2038,10 @@ thread, by solid.Shape.thread. By default (false) the
 shoulder and the thread are plain cylinders. The radii r1 and
 r2 and the chamfer at the end of the thread are left out.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of ISO 8991, as in
+designation designation of ISO 8991, as in
 'Hexagon socket head shoulder screw ISO 7379 - 10 x 40', without
 the property class
 standard 'ISO 7379' when the standard defines
@@ -2028,12 +2056,12 @@ k head height, largest
 fit tolerance of the shoulder, 'f9' as
 ISO 7379 gives it or 'h8'
 drive 'hexsocket'
-tool the hexagon key, as '5'
+tool hexagon key, as '5'
 class property class or stainless steel grade
-finish the finish as the maker names it
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+finish finish as the maker names it
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 A screw is designated by the standard's number when ISO 7379 defines it:
 a shoulder diameter of its table with the thread it gives, a shoulder of
@@ -2077,7 +2105,7 @@ parts.washer.plain
 # name: <cell-element>
 # type: sq_string
 # elements: 1
-# length: 3179
+# length: 3204
 parts: C = parts.washer.plain ('data')
 parts: C = parts.washer.plain ('data', NAME)
 parts: S = parts.washer.plain ('solid', NAME)
@@ -2086,8 +2114,8 @@ Plain washers, product grade A: normal series, ISO 7089, and chamfered,
 ISO 7090, small series, ISO 7092, and large series, ISO 7093-1.
 
 C = parts.washer.plain ('data') returns every plain
-washer in the catalogue as a struct array, one entry for each maker's
-article in each size, sorted by size.
+washer in the catalogue as a table, one row for each maker's article in
+each size, sorted by size.
 C = parts.washer.plain ('data', NAME) returns
 those for the screw thread NAME, as 'M8': every article
 sold as that washer, each with its hardness class, material and finish.
@@ -2118,11 +2146,12 @@ outside edge of its top face, at 30 degrees to the axis and h/4
 deep, the smallest chamfer the standard allows. By default
 (false) it is a plain ring. The other washers have no detail.
 
-Each entry is a struct with these fields, lengths in millimetres:
+The table has these variables, each with its unit and its description,
+which summary (C) lists; lengths are in millimetres:
 
-designation the designation of the standard, as in
+designation designation of the standard, as in
 'Washer ISO 7089 - 8', without the hardness class
-standard the standard
+standard standard
 d nominal size, the diameter of the screw thread
 d1 inside diameter, nominal, the smallest
 d2 outside diameter, nominal, the largest
@@ -2131,11 +2160,11 @@ class hardness class, '200 HV' or
 '300 HV'; empty for a material the standards give none
 material 'steel', a stainless steel as
 'A2', or another as 'brass'
-finish the finish as the maker names it, as
+finish finish as the maker names it, as
 'plain' or 'zinc plated'
-maker the maker
-article the maker's article number
-source the catalogue and page the article was read from
+maker maker
+article maker's article number
+source catalogue and page the article was read from
 
 The catalogue
 
