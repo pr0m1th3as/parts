@@ -1,0 +1,2172 @@
+# doc-cache created by Octave 11.3.0
+# name: cache
+# type: cell
+# rows: 3
+# columns: 19
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 24
+parts.bearing.deepgroove
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 2262
+parts: B = parts.bearing.deepgroove ('data')
+parts: B = parts.bearing.deepgroove ('data', DESIGNATION)
+parts: S = parts.bearing.deepgroove ('solid', DESIGNATION)
+Single row deep groove ball bearings from the catalogue.
+
+B = parts.bearing.deepgroove ('data') returns every
+bearing in the catalogue as a struct array, sorted by bore, then outside
+diameter, then width.
+B = parts.bearing.deepgroove ('data',
+DESIGNATION) returns the one bearing named, such as '6205'
+or '61930 MA'. Nothing is built.
+
+S = parts.bearing.deepgroove ('solid',
+DESIGNATION) builds the bearing as a solid.Shape, its axis
+on the z axis, one face on the xy plane and the other at
+z = B: the inner and the outer ring, each with its
+raceway, and the balls between them, each a solid of its own; the cage
+is left out. The catalogue gives no internal geometry, so the shape
+takes the proportions of the type: balls
+of diameter Dw = min (0.3*(D - d), 0.8*B) on the pitch circle
+(d + D)/2, as many as fill 60 per cent of it; each ring stops
+0.3*Dw short of the pitch circle, with a groove of radius
+0.52*Dw, so that the balls run free; the outer corners of the
+rings are rounded to r. It shows the bearing; it does not stand
+for the maker's internal design.
+
+Each bearing is a struct with these fields, lengths in millimetres, loads
+in newtons:
+
+designation the designation, as SKF prints it
+d bore diameter
+D outside diameter
+B width
+r smallest chamfer of the rings, r_{1,2} min
+da smallest diameter of a shaft shoulder,
+d_a min
+Da largest diameter of a housing shoulder,
+D_a max
+ra largest fillet radius at a shoulder, r_a max
+C basic dynamic load rating
+C0 basic static load rating
+nlim limiting speed, revolutions per minute
+mass mass, in kilograms
+source the catalogue page the values were read from
+
+The catalogue
+
+The open bearings of the series 618, 619, 60 and 62, bores 4 to 380 mm,
+transcribed from the product tables of the SKF catalogue Rolling
+bearings (PUB BU/P1 17000 EN), section 1.1, pages 260 to 302. Where
+SKF lists a bearing only with a brass cage, such as '61930 MA',
+that is the one given. The boundary dimensions follow ISO 15 and hold for
+any maker; the load ratings and the speed are SKF's, and another maker's
+differ.
+
+See also:
+parts.screw.cap,
+parts.dowel,
+parts.key
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 56
+Single row deep groove ball bearings from the catalogue.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+parts.dowel
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 1579
+parts: P = parts.dowel ('data')
+parts: P = parts.dowel ('data', D)
+parts: S = parts.dowel ('solid', D, L)
+parts: S = parts.dowel (..., Name, Value)
+Parallel dowel pins to ISO 8734, hardened.
+
+P = parts.dowel ('data') returns every diameter in
+the catalogue as a struct array, smallest first.
+P = parts.dowel ('data', D) returns the one of
+diameter D millimetres, with the lengths in stock. Nothing is
+built.
+
+S = parts.dowel ('solid', D, L) builds
+the pin of diameter D as a solid.Shape L long, whether
+or not that length is in stock: its axis on the z axis, from
+z = 0 to L.
+
+Name/Value pairs:
+
+'Detailed'
+For 'solid': true chamfers both ends c along the axis
+at 15 degrees. By default (false) the pin is a plain cylinder.
+
+Each diameter is a struct with these fields, lengths in millimetres:
+
+d nominal diameter, toleranced m6
+c the chamfer at each end, approximate
+l the lengths in stock, a row vector
+maker the maker
+article the maker's article number
+source the catalogue and page the pin was read from
+
+The catalogue
+
+REYHER, The Catalogue, edition 2020.04, English, pages 374 and
+375: article 08734.001, steel, type A, through-hardened, every diameter
+ISO 8734 defines, 1 to 20 mm, with the lengths in stock. Left out: the
+14 mm pin REYHER also sells, a diameter ISO 8734 does not define. The
+pins REYHER sells under DIN 6325, which ISO 8734 replaced, are not
+included.
+
+The chamfer c from Table 1 of ISO 8734:1997, as adopted word for
+word in IS 6689:2003, and REYHER's Technical Information (2019,
+TI-116).
+
+See also:
+parts.bearing.deepgroove,
+parts.screw.cap,
+parts.key
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 42
+Parallel dowel pins to ISO 8734, hardened.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 20
+parts.insert.heatset
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4535
+parts: C = parts.insert.heatset ('data')
+parts: C = parts.insert.heatset ('data', NAME)
+parts: C = parts.insert.heatset ('data', NAME, L)
+parts: S = parts.insert.heatset ('solid', NAME, L)
+parts: ... = parts.insert.heatset (..., Name, Value)
+Heat-set threaded inserts: knurled brass inserts with a metric thread,
+pressed hot into a hole in a 3D-printed or other thermoplastic part.
+
+C = parts.insert.heatset ('data') returns every insert
+in the catalogue as a struct array, one entry for each insert, sorted by
+thread, length and outside diameter.
+C = parts.insert.heatset ('data', NAME) returns
+those of the thread NAME, as 'M4', and
+C = parts.insert.heatset ('data', NAME, L)
+those L millimetres long, each with the hole it needs. Nothing is
+built.
+
+S = parts.insert.heatset ('solid', NAME, L)
+builds the insert as a solid.Shape: its top face, where the screw
+enters, on the xy plane, the insert below it to z =
+-L, its axis on the z axis. Placed at the mouth of a hole
+drilled along -z, it sits flush with the surface, as it is set.
+S.Name holds the designation, as
+'Heat-set insert M4 x 8.1'. Only inserts in the catalogue are
+built.
+
+No function cuts or sizes the hole, here or in drafting: a printed
+hole comes out a different size with each printer, material and setting,
+so the designer makes it. The entry's d3 is the makers'
+recommendation to start from; its t and w are the depth and
+wall the part must leave for the insert.
+
+Name/Value pairs:
+
+'Maker'
+For 'data': only the inserts that maker sells, 'ruthex' or
+'CNC Kitchen', in any case.
+'Diameter'
+Only the insert of that outside diameter d1. Two inserts are M3 x
+4, one 4.6 and one 5 across, the second made for the Voron printers, and a
+solid of either needs it.
+'Detailed'
+For 'solid': true knurls the two bands, chamfers the end
+of the pilot and cuts the thread through by solid.Shape.thread. By
+default (false) the insert has its outline, the bands plain at
+d1, a groove after each and the pilot, with a bore of the thread's
+nominal diameter.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation thread by length, as 'M4 x 8.1',
+and by outside diameter between them where two inserts share both, as
+'M3 x 5 x 4'
+thread the thread, as 'M4'
+d nominal diameter of the thread
+L length, nominal
+d1 outside diameter, over the knurl
+d2 diameter of the pilot at the lower end; NaN where
+no maker gives one
+d3 diameter of the hole the makers recommend
+t depth of a blind hole, smallest: L + 1
+w wall round the hole, smallest
+makers the makers who sell the insert, as a cell array
+source the documents the insert was read from, one for
+each maker, as a cell array
+
+The form
+
+The makers' inserts differ only in their knurls, which no fit depends on,
+so every insert is built to one form from its own L,
+d1 and d2, in proportions read from the makers' models. This
+form is a modelling choice; no maker dimensions it. Where no maker gives
+d2, the pilot is 0.1 smaller than the hole, as ruthex's are. With
+h = (d1 - d2) / 2, from the top down:
+
+Feature From the top Diameter
+upper band 0 to 0.29 L d1, knurled
+left-hand at 50 degrees
+groove 0.29 L to 0.40 L d2 - 0.75
+h
+lower band 0.40 L to 0.75 L d1,
+knurled right-hand at 45 degrees
+groove 0.75 L to 0.85 L d2 - 1.25
+h
+pilot 0.85 L to L d2, chamfered
+L/50 at 45 degrees at its end when detailed
+
+The bands are knurled only when detailed. The knurls have the teeth of
+90 degrees of DIN 82, cut to full depth with their roots at d2: a
+pitch of 2 h, fitted by solid.Shape.knurl to a whole number
+of teeth.
+
+The catalogue
+
+Every insert ruthex or CNC Kitchen sells with a metric thread. The values
+are ruthex's where it sells the insert, CNC Kitchen's otherwise, but for
+the wall, which is the larger of the two. Where both sell an insert they
+agree, except that CNC Kitchen recommends holes 0.1 larger from M4 to M8,
+gives M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3
+x 5 x 4 a wall of 1.6 against 1.3.
+
+ruthex: the RX series product data sheet, metric ISO thread, status
+15.08.2022, page 1, for every insert but two sold since, read from the
+drawings on their packets as ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8)
+and M10 x 12.7 (RX-M10x12.7).
+
+CNC Kitchen: Dimensions & Design Guidelines, metric inserts, June
+2025. It gives no pilot diameter.
+
+The depth of a blind hole, L + 1, is drawn by both. The proportions
+of the form come from the makers' own published STEP models,
+measured: ruthex's ten metric models and CNC Kitchen's twelve.
+
+See also:
+parts.screw.cap,
+parts.nut.hex
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 139
+Heat-set threaded inserts: knurled brass inserts with a metric thread, pressed hot into a hole in a 3D-printed or other thermoplastic part.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+parts.key
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 1854
+parts: K = parts.key ('data')
+parts: K = parts.key ('data', DS)
+parts: S = parts.key ('solid', DS, L)
+parts: S = parts.key (..., Name, Value)
+Parallel keys to DIN 6885-1, form A.
+
+K = parts.key ('data') returns every key in the
+catalogue as a struct array, smallest first.
+K = parts.key ('data', DS) returns the key for
+a shaft of diameter DS millimetres, over 6 up to 85. A shaft on the
+boundary of two rows takes the smaller key, as the table's ranges run over
+one diameter up to the next. Nothing is built.
+
+S = parts.key ('solid', DS, L) builds the
+key for that shaft as a solid.Shape L long, whether or not
+that length is in the standard series: its length along z from 0
+to L, its width centred on the x axis, its height along
+y from 0 to h, both ends rounded.
+
+Name/Value pairs:
+
+'Detailed'
+For 'solid': true chamfers the edges round the top and the
+bottom face by the smallest s. By default (false) the edges
+are sharp.
+
+Each key is a struct with these fields, in millimetres:
+
+shaft the shaft diameters it serves, over the first up
+to the second
+b width
+h height
+t1 depth of the keyway in the shaft
+t2 depth of the keyway in the hub, over the shaft
+s the chamfer of the edges, smallest and largest
+l the standard lengths, a row vector
+
+The catalogue
+
+Shafts over 6 up to 85 mm, from the data sheet Passfedern DIN 6885,
+hohe Form of Wilhelm Wernecke GmbH (2016), agreeing with four other
+makers' tables; the lengths are those of the DIN series 6 to 250 within
+each row's range. Depths are toleranced +0.1 for widths up to 6 and +0.2
+above.
+
+The chamfer s, which neither the data sheet nor REYHER's
+Technical Information gives, from ISO/R 773:1969, the ISO
+counterpart of DIN 6885-1 with the same sections and lengths, read in its
+official preview and agreeing with BS 4235-1:1972.
+
+See also:
+parts.bearing.deepgroove,
+parts.dowel,
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 36
+Parallel keys to DIN 6885-1, form A.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 14
+parts.material
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 2993
+parts: M = parts.material ()
+parts: M = parts.material (NAME)
+parts: M = parts.material (NAME, SIZE)
+Properties of the materials parts are made of.
+
+M = parts.material () returns every material in the catalogue
+as a struct array. M = parts.material (NAME) returns the
+one named, such as 'C45'. For a metal, whose strength depends on
+the size of the section, M = parts.material (NAME,
+SIZE) returns the strength for a section SIZE millimetres
+across, the diameter of a bar or the thickness of a plate; without
+SIZE it returns the smallest section's.
+
+Each material is a struct with these fields, stresses in megapascals:
+
+name the name it is asked for by
+class 'metal', 'machined polymer' or
+'printed polymer'
+E Young's modulus
+nu Poisson's ratio
+Rp yield strength, 0.2 per cent proof stress or tensile
+stress at yield; empty where the source gives none
+Rm tensile strength; empty where the source gives none
+A elongation at break, per cent; empty where the source
+gives none
+rho density, kilograms per cubic metre
+sizes for a metal, the rows [up to, Rp, Rm,
+A] the strength is tabulated in; empty for a polymer
+source where the values come from
+
+Values are minimums where the source states minimums. A printed polymer
+carries the weaker of the orientations its datasheet gives, since a printed
+part is loaded across its layers somewhere.
+
+The catalogue
+
+Name Source
+'C45' EN 10083-2:2006, Table 10, normalised (+N), by
+diameter up to 250 mm; modulus, Poisson's ratio and density from Ovako's
+C45 data sheet (2025). The standard is withdrawn for EN ISO 683-1:2018.
+'EN AW-6082-T6' EN 755-2, extruded round bar, T6, by
+diameter up to 250 mm, as tabulated by Bikar Metals; Poisson's ratio from
+EN 1999-1-1, 3.2.5.
+'CuSn12' CuSn12-C, EN 1982, continuously cast (GC), as
+tabulated by the Deutsches Kupferinstitut (2005).
+'PETG' Prusament PETG, technical datasheet 1.1 (2022),
+ISO 527-1 on printed specimens.
+'PETG-CF' Prusament PETG Carbon Fiber, technical
+datasheet 1.0 (2022), ISO 527-1 on printed specimens.
+'PA6-CF' Polymaker Fiberon PA6-CF20, technical datasheet
+1.1 (2024): wet, after 48 hours in water at 60 degrees Celsius, 5.3 per cent
+moisture, loaded across the layers (Z). It gives no yield strength.
+'Ertalon 6 SA' Machined PA6 stock: conditioned at 23
+degrees Celsius and 50 per cent humidity, from an older undated product sheet
+that calls these values mostly derived from literature; density from the
+Mitsubishi Chemical Advanced Materials sheet of 2024. It gives no tensile
+strength.
+
+No datasheet of the polymers, nor of CuSn12, gives a Poisson's ratio:
+the nylons take 0.40, conditioned polyamide in Bayer's design guide
+Engineering Polymers: Part and Mold Design (2000), Table 3-1; the
+PETGs 0.40, DuPont's rule for plastics of modulus 500 to 2500 MPa in
+General Design Principles, Module I; CuSn12 0.35, as tabulated for
+centrifugally cast CuSn12 by Gruender et al., IOP Conf. Ser.: Mater. Sci.
+Eng. 1190 (2021) 012006, Table 3.
+
+See also:
+parts.bearing.deepgroove,
+parts.dowel
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 46
+Properties of the materials parts are made of.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 16
+parts.nut.flange
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4464
+parts: C = parts.nut.flange ('data')
+parts: C = parts.nut.flange ('data', NAME)
+parts: S = parts.nut.flange ('solid', NAME)
+parts: ... = parts.nut.flange (..., Name, Value)
+Hexagon nuts with flange: plain, ISO 4161 and with a fine thread ISO 10663,
+and prevailing torque nuts with a non-metallic insert, ISO 7043 and with a
+fine thread ISO 12125, and all-metal, ISO 7044 and with a fine thread ISO
+12126; and the European standards the market sells them by, EN 1661, 1663
+and 1664.
+
+C = parts.nut.flange ('data') returns every flange
+nut in the catalogue as a struct array, one entry for each maker's
+article in each size, sorted by size and pitch.
+C = parts.nut.flange ('data', NAME) returns
+those of the thread NAME, a coarse thread as 'M10' or a fine
+one as 'M10x1.25': every article sold as that nut, each with its
+property class and finish. Nothing is built.
+
+S = parts.nut.flange ('solid', NAME) builds the
+nut as a solid.Shape whether or not anyone sells it: any thread
+whose nut the standards define, in any pitch. The bearing face of the
+flange lies on the xy plane, the nut above it to z =
+h with two corners of its hexagon on the x axis.
+S.Name holds the designation.
+
+Name/Value pairs:
+
+'Locking'
+false for a plain nut, the default for 'solid',
+'insert' or true for a prevailing torque nut with a
+non-metallic insert, 'metal' for an all-metal one. For
+'data' it keeps that kind only; without it all come.
+'Standard'
+'ISO', the default for 'solid', or 'EN'. The
+two differ at M10, 15 across flats in ISO and 16 in EN, and in the
+smallest thread height of an EN prevailing torque nut at M8 to M12. For
+'data' it keeps that standard's nuts only; without it both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true builds the flange c thick at
+dw, its top a cone at 15 degrees, the smallest the standards
+allow, rising to the hexagon; chamfers the top of the hexagon at 30
+degrees from the flats; countersinks the bore at 120 degrees to
+da, at both ends of a plain nut and at the bearing face of a
+prevailing torque one; and cuts the thread by solid.Shape.thread
+through the nut. By default (false) the nut is a plain disc
+dc across and c thick under a hexagonal prism, with a bore of
+diameter d. A prevailing torque nut is the hexagon h high in
+both; the standards leave the form of its locking part to the maker.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation, as in
+'Hexagon nut EN 1661 - M12', without the property class
+standard the standard when its table defines the nut,
+else empty: such a nut is custom
+d nominal diameter
+P pitch
+s width across flats, nominal
+e width across corners, smallest
+m height of the thread: the nut's largest height; for
+a prevailing torque nut the smallest, the only one its standard gives
+h overall height, largest: m for a plain nut
+dc diameter of the flange, largest
+c thickness of the flange at dw, smallest
+dw diameter of the bearing face, smallest
+da diameter of the countersink, largest
+grade product grade, 'A' up to M16,
+'B' above
+class property class or material, as '8' or
+'A2'
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A nut is designated by its standard's number when the standard's table
+defines its thread. Any other is custom, a nut with a fine thread that
+ISO 10663, 12125 or 12126 does not list, or an EN nut with a fine thread,
+and takes the dimensions of its kind's coarse thread.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 222, 223 (steel) and 521 (stainless steel): every article of EN
+1661, 1663 and 1664 in sizes they define. Left out: the articles of DIN
+6923, 6926 and 6927, withdrawn and replaced by the EN standards. No
+maker's catalogue read so far sells the ISO ones.
+
+Dimensions from ISO 4161, 7043, 7044, 10663 and 12126, all 2012, Table 1
+of each, read in their official previews, GOST R ISO 4161-2013, GOST ISO
+7043-2014, 7044-2016 and 12126-2016 and IS 15581:2005, which adopt them
+unchanged, and fasten.it; ISO 12125:2012 from globalfastener's
+reproduction, which the draft ISO/DIS 12125:2016 confirms; EN 1661, 1663
+and 1664, 1997, from their own tables, read in SIST EN 1661 and 1664:2001
+and DIN EN 1663:1998, and fasten.it and REYHER's Technical
+Information (2019, TI-64 and 69).
+
+See also:
+parts.nut.hex,
+parts.screw.hex
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 308
+Hexagon nuts with flange: plain, ISO 4161 and with a fine thread ISO 10663, and prevailing torque nuts with a non-metallic insert, ISO 7043 and with a fine thread ISO 12125, and all-metal, ISO 7044 and with a fine thread ISO 12126; and the European standards the market sells them by, EN 1661, 1663 and 1664.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 13
+parts.nut.hex
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4137
+parts: C = parts.nut.hex ('data')
+parts: C = parts.nut.hex ('data', NAME)
+parts: S = parts.nut.hex ('solid', NAME)
+parts: ... = parts.nut.hex (..., Name, Value)
+Hexagon nuts: regular, ISO 4032 and with a fine thread ISO 8673, thin,
+ISO 4035 and with a fine thread ISO 8675, and prevailing torque nuts with
+a non-metallic insert, regular, ISO 7040, and thin, ISO 10511.
+
+C = parts.nut.hex ('data') returns every hexagon nut
+in the catalogue as a struct array, one entry for each maker's article in
+each size, sorted by size and pitch.
+C = parts.nut.hex ('data', NAME) returns those
+of the thread NAME, a coarse thread as 'M10' or a fine one
+as 'M10x1.25': every article sold as that nut, each with its
+property class and finish. Nothing is built.
+
+S = parts.nut.hex ('solid', NAME) builds the
+nut as a solid.Shape whether or not anyone sells it: any thread
+whose nut the standards define, in any pitch. The bearing face lies on
+the xy plane, the nut above it to z = h with two of
+its corners on the x axis. S.Name holds the
+designation.
+
+Name/Value pairs:
+
+'Thin'
+true for a thin nut, ISO 4035, 8675 or 10511, false for a
+regular one, the default for 'solid'. For 'data' it
+keeps that kind only; without it both come.
+'Locking'
+true for a prevailing torque nut with a non-metallic insert, ISO
+7040 or ISO 10511, false for a plain one, the default for
+'solid'. For 'data' it keeps that kind only; without it
+both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true chamfers the hexagon at 30 degrees
+from the flats on both faces, countersinks the bore at 120 degrees to
+da on both faces and cuts the thread by solid.Shape.thread
+through the nut. By default (false) the nut is a plain
+hexagonal prism with a bore of diameter d. A prevailing torque
+nut is the hexagon h high in both; the standards leave the form of
+its collar and insert to the maker.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon regular nut ISO 4032 - M12', without the property class
+standard the standard when its table defines the nut,
+else empty: such a nut is custom
+d nominal diameter
+P pitch
+s width across flats, nominal
+e width across corners, smallest
+m height of the thread: the nut's largest height; for
+a prevailing torque nut the smallest, the only one its standard gives
+h overall height, largest: m for a plain nut
+dw diameter of the bearing face, smallest
+da diameter of the countersink, largest
+grade product grade, 'A' up to M16, 'B'
+above
+class property class or material, as '8',
+'A4-70' or 'brass'
+finish the finish as the maker names it, as
+'plain' or 'hot dip galvanized'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A nut is designated by its standard's number when the standard's table
+defines its thread. Any other is custom, a prevailing torque nut with a
+fine thread, or a plain one in a pitch ISO 8673 or 8675 does not list,
+and takes the dimensions of its kind's coarse thread.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 279 to 285, 324, 325 and 369 to 371 (steel), 544 to 547, 559, 582,
+586 and 587 (stainless steel), and 637 to 643 (brass, copper alloy,
+aluminium, titanium): every article of a hexagon nut of the six
+standards, pressure vessel grades and hot dip galvanized ones included,
+in sizes the standards define. Left out: left hand threads, the type 2
+nut of ISO 4033, and the steel prevailing torque nuts REYHER sells under
+DIN 982 and DIN 985, withdrawn and not identical to ISO 7040 and ISO
+10511.
+
+Dimensions from ISO 4032, 4035, 8673, 8675, 7040 and 10511, all 2012,
+Table 1 of each, read in their official previews and checked cell by
+cell against IS 1364 Parts 3:2002 and 4:2003, IS 13722:2002, IS
+13724:2002 and IS 7002:2005, which adopt the previous editions unchanged,
+and the 1997 edition of ISO 10511, which agree but for ISO 10511's
+dw at M3, 4.56 against 4.6; REYHER's Technical Information
+(2019, TI-61 to 63 and TI-9) agrees.
+
+See also:
+parts.screw.hex,
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 207
+Hexagon nuts: regular, ISO 4032 and with a fine thread ISO 8673, thin, ISO 4035 and with a fine thread ISO 8675, and prevailing torque nuts with a non-metallic insert, regular, ISO 7040, and thin, ISO 10511.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 20
+parts.ring.retaining
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3731
+parts: C = parts.ring.retaining ('data')
+parts: C = parts.ring.retaining ('data', D1)
+parts: S = parts.ring.retaining ('solid', D1)
+parts: ... = parts.ring.retaining (..., Name, Value)
+Retaining rings, with the grooves they sit in: for shafts, DIN 471, and
+for bores, DIN 472, each of the normal and the heavy type.
+
+C = parts.ring.retaining ('data') returns every
+retaining ring in the catalogue as a struct array, one entry for each
+maker's article in each size, sorted by diameter.
+C = parts.ring.retaining ('data', D1) returns
+those for a shaft or bore of diameter D1: every article sold as
+that ring, each with its material and finish, and the groove to cut for
+it. Nothing is built.
+
+S = parts.ring.retaining ('solid', D1) builds
+the ring as a solid.Shape whether or not anyone sells it, in any
+size its standard defines, free, as it is before fitting: lying on the
+xy plane, s thick, its axis on the z axis and its
+gap on the positive x axis. S.Name holds the
+designation.
+
+Name/Value pairs:
+
+'Bore'
+true for a ring for a bore, DIN 472, false for one for a
+shaft, DIN 471, the default for 'solid'. For 'data' it
+keeps that kind only; without it both come.
+'Heavy'
+true for the heavy type, false for the normal one, the
+default for 'solid'. For 'data' it keeps that type
+only; without it both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true builds the ring's form: the section
+narrowing from b opposite the gap to b/2 at the free ends,
+the two lugs a high across the ring with a hole of diameter
+d5 in each, outwards for a shaft and inwards for a bore, and the
+gap between them as wide as a hole. No source dimensions the taper, the
+lugs or the gap, which the standards leave to the maker, so these are a
+modelling choice. By default (false) the ring is a flat ring
+b wide on d3, without a gap.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of the standard, as in
+'Retaining ring DIN 471 - 50 x 2'
+standard 'DIN 471' or 'DIN 472'
+type 'normal' or 'heavy'
+d1 diameter of the shaft or the bore
+s thickness of the ring, nominal
+d3 diameter of the free ring, nominal: inside for a
+shaft, outside for a bore
+a radial height of the lugs, largest
+b radial width of the ring opposite the gap, about
+d5 diameter of the holes in the lugs, smallest
+d4 diameter the fitted ring sweeps, the room it
+needs: outside for a shaft, inside for a bore; NaN where the sources give
+none
+d2 diameter of the groove, nominal
+m width of the groove, smallest (H13)
+t depth of the groove
+n distance from the groove to the end of the shaft or
+bore, smallest
+material 'spring steel' or a stainless steel
+by its number, as '1.4122'
+finish the finish as the maker names it, as
+'plain' or 'zinc flake'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 89 to 91 (spring steel) and 469 to 470 (stainless steel): every
+article of the two standards in sizes they define. Left out: the
+intermediate sizes REYHER sells outside the standards' tables.
+
+Dimensions of the rings and grooves from the tables of DIN 471:2011-04 and
+DIN 472:2011-10 as fasten.it reproduces them by permission of DIN, which
+set the sizes, read against the catalogues of Seeger-Orbis (2007) and Rotor
+Clip (2011) and REYHER's Technical Information (2019, TI-91 to
+97): every value but d4 in at least two of them. d4 is
+REYHER's, a second source agreeing at about thirty sizes. DIN 471 and
+DIN 472 are current in their editions of 2026-05; DIN 472's revises its
+tables in ways not read.
+
+See also:
+parts.key,
+parts.bearing.deepgroove
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 130
+Retaining rings, with the grooves they sit in: for shafts, DIN 471, and for bores, DIN 472, each of the normal and the heavy type.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 18
+parts.screw.button
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4159
+parts: C = parts.screw.button ('data')
+parts: C = parts.screw.button ('data', NAME)
+parts: C = parts.screw.button ('data', NAME, L)
+parts: S = parts.screw.button ('solid', NAME, L)
+parts: ... = parts.screw.button (..., Name, Value)
+Hexagon socket button head screws, ISO 7380-1, and with collar,
+ISO 7380-2.
+
+C = parts.screw.button ('data') returns every button
+head screw in the catalogue as a struct array, one entry for each maker's
+article in each size and length, sorted by size and length.
+C = parts.screw.button ('data', NAME) returns
+those of the thread NAME, such as 'M5', and
+C = parts.screw.button ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its property class and finish. Nothing is built.
+
+S = parts.screw.button ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread of a size the standard defines, any pitch, any length. The
+bearing face of the head lies on the xy plane, the head above it,
+the shank below it to z = -L, the socket with two corners
+on the x axis. S.Name holds the screw's
+designation.
+
+Name/Value pairs:
+
+'Flange'
+true for the screw with a collar under its head, ISO 7380-2;
+false for the plain head, ISO 7380-1, the default of a solid.
+For 'data' it keeps those screws only; without it both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L; L threads it to the head. Without it the
+screw follows Table 1 of ISO 7380-1 or ISO 7380-2, which agree:
+threaded to the head up to the length the table gives, longer ones
+threaded b.
+'Detailed'
+For 'solid': true also builds the fillet under the head,
+of radius rs under a plain shank and rt on a screw threaded
+to the head, and the thread, cut by solid.Shape.thread; a thread
+to the head runs to within 3P of it. By default (false)
+the shank is a plain cylinder of diameter d. Either way the socket
+is cut to its smallest depth t and the end is left flat, as rolled.
+
+The head is a dome that springs from the bearing face, or from the
+collar of ISO 7380-2, dk across and rises to k above the
+bearing face; its radius follows from the two, the standards giving
+rf for reference and leaving the contour to the maker. The collar
+is dc across and c high.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon socket button head screw ISO 7380-1 - M5 x 20', without
+the property class
+standard 'ISO 7380-1' or 'ISO 7380-2'
+when its table defines the screw, else empty: such a screw is custom
+d nominal diameter
+P pitch, coarse
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+dk head diameter, largest
+dc collar diameter, largest; NaN without a collar
+k head height, the collar included, largest
+drive 'hexsocket'
+tool the hexagon key, across flats, as '3'
+class property class or material, as REYHER prints it:
+'010.9' marks the reduced loadability of the head
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by the standard's number when its table defines it:
+a length of the size's commercial range with the thread form the table
+gives it. Every other screw is custom and takes its standard's title,
+its thread length written when shorter than l, as
+'Hexagon socket button head screw with collar M5 x 60 x 22'.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 342 to 345 (steel) and 571 to 573 (stainless steel): every article
+with a hexagon socket. Left out: the hexalobular articles 07380.114,
+07380.349, 07380.921 and 07380.924, whose socket ISO 7380 does not
+define. REYHER notes that some of its screws are threaded to the head;
+they are taken here as the standard threads them.
+
+Heads, sockets, thread lengths and lengths from ISO 7380-1:2011 and
+ISO 7380-2:2011, read in their official previews, which agree with
+GOST ISO 7380-1-2014 and GOST ISO 7380-2-2014.
+
+See also:
+parts.screw.cap,
+parts.screw.lowcap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 75
+Hexagon socket button head screws, ISO 7380-1, and with collar, ISO 7380-2.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 15
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4784
+parts: C = parts.screw.cap ('data')
+parts: C = parts.screw.cap ('data', NAME)
+parts: C = parts.screw.cap ('data', NAME, L)
+parts: S = parts.screw.cap ('solid', NAME, L)
+parts: ... = parts.screw.cap (..., Name, Value)
+Socket head cap screws, ISO 4762 and ISO 14579.
+
+C = parts.screw.cap ('data') returns every cap screw
+in the catalogue as a struct array, one entry for each maker's article in
+each size and length, sorted by size and length.
+C = parts.screw.cap ('data', NAME) returns
+those of the thread NAME, such as 'M5', and
+C = parts.screw.cap ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its property class and finish. Nothing is built.
+
+S = parts.screw.cap ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread whose head the standard defines, any length. NAME names
+a coarse thread by its diameter, 'M5', or any pitch, as
+'M16x0.8'. The underside of the head lies on the xy
+plane, the head above it to z = k, the shank below it to
+z = -L, the socket sunk into the head with two of its
+corners or lobes on the x axis. S.Name holds the
+screw's designation.
+
+Name/Value pairs:
+
+'Drive'
+The socket: 'hexsocket' (alias 'allen'), ISO 4762, the
+default, or 'hexalobular' (alias 'torx'), ISO 14579. For
+'data' it keeps that drive's screws only; without it both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L; L threads it to the head. Without it the
+thread follows Table 1 of ISO 4762 or ISO 14579, which agree: threaded
+to the head up to the longest length the table threads so, and b
+of the table from its first length with a plain shank. A length between
+the two takes no default and needs 'ThreadLength'.
+'Detailed'
+For 'solid': true builds the screw as its standard defines
+it, slower: the fillet of radius r under the head, the hexalobular
+socket's true outline, and the thread, cut by
+solid.Shape.thread. A thread to the head runs to within
+3P of it, as Table 1 allows. By default (false) the shank
+is a plain cylinder of diameter d, the edges are sharp and the
+hexalobular socket is a round hole of its diameter A. Either way
+the socket is cut to its smallest depth t; the point is left
+flat, its chamfer not given by the sources.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon socket head cap screw ISO 4762 - M5 x 20', without the
+property class
+standard 'ISO 4762' or 'ISO 14579'
+when the standard's table defines the screw, else empty: such a screw is
+custom
+d nominal diameter
+P pitch, coarse
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+dk head diameter, plain head, largest
+k head height, largest
+drive 'hexsocket' or 'hexalobular'
+tool the key or bit, as '4' or 'T30'
+class property class or stainless steel grade, as
+'12.9' or 'A2-70'; a grade alone, 'A2', where
+the maker's class depends on production
+finish the finish as the maker names it, as
+'plain' or 'zinc plated'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by its standard's number only when the standard's
+table defines it: the size, the length and, through the length, whether
+it is threaded to the head. Every other screw is custom, its thread
+length written when shorter than l, as
+'Hexagon socket head cap screw M5 x 60 x 22'.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 286 to 304 (steel), 547 to 551 (stainless steel), 402 and 121
+(hexalobular): every article of a plain screw in sizes ISO 4762 defines,
+M1.6 to M64, and in lengths ISO 4762 Table 1 gives a thread for.
+Left out: the sizes M1.4, M18, M22, M27, M33 and M39, whose socket depth
+and thread form the sources do not give; the lengths M3 x 22, M4 x 28,
+M6 x 32, M20 x 75 and M24 x 85, which fall between Table 1's threaded
+and plain shank lengths; and an M 25 x 50 printed in article 04762.810,
+a thread ISO 261 does not have. The two articles of 8.8FT are threaded
+to the head at every length. Article 00912.814, filed under DIN 912,
+is the ISO 14579 screw by REYHER's own note.
+
+Heads, sockets and thread lengths from ISO 4762:2004 Table 1, read in
+IS 2269:2006, which agrees with REYHER's Technical Information
+(2019, TI-12). Hexalobular heads and thread lengths from TI-12, socket
+numbers and depths from DIN EN ISO 14579:2011 as reproduced by fasten.it
+and fasteners.eu, which agree; its lengths and thread form from
+ISO 14579:2011, read in GOST R ISO 14579-2015, which agrees with
+GOST R ISO 14579-2009 and fasteners.eu.
+
+See also:
+parts.bearing.deepgroove,
+parts.dowel,
+parts.key
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 47
+Socket head cap screws, ISO 4762 and ISO 14579.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 18
+parts.screw.cheese
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4106
+parts: C = parts.screw.cheese ('data')
+parts: C = parts.screw.cheese ('data', NAME)
+parts: C = parts.screw.cheese ('data', NAME, L)
+parts: S = parts.screw.cheese ('solid', NAME, L)
+parts: ... = parts.screw.cheese (..., Name, Value)
+Cheese head screws: slotted, ISO 1207, and hexalobular socket, ISO 14580.
+
+C = parts.screw.cheese ('data') returns every cheese
+head screw in the catalogue as a struct array, one entry for each maker's
+article in each size and length, sorted by size and length.
+C = parts.screw.cheese ('data', NAME) returns
+those of the thread NAME, such as 'M5', and
+C = parts.screw.cheese ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its material or property class and finish. Nothing is built.
+The catalogue holds slotted screws only.
+
+S = parts.screw.cheese ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread of a size the standard defines, any pitch, any length. The
+bearing face of the head lies on the xy plane, the head above it,
+the shank below it to z = -L, the slot along the x
+axis, a hexalobular socket with two lobes on it. S.Name
+holds the screw's designation.
+
+Name/Value pairs:
+
+'Drive'
+The drive: 'slot', ISO 1207, the default, or
+'hexalobular' (alias 'torx'), ISO 14580, whose head is
+higher. For 'data' it keeps that drive's screws only; without it
+every screw comes.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L; L threads it to the head. Without it the
+screw follows ISO 1207 or ISO 14580, which agree: threaded to the head
+up to 30 long for M3 and smaller and 40 for the rest, and longer ones
+threaded b min, 25 and 38.
+'Detailed'
+For 'solid': true builds the head's side at the standard's
+largest taper, 5 degrees, dk across at the bearing face, the fillet
+of radius r under it, and the thread, cut by
+solid.Shape.thread; a screw threaded to the head is threaded to
+within a of it; the hexalobular socket takes its true outline. By
+default (false) the head is a cylinder, the shank a plain cylinder
+of diameter d and the hexalobular socket a round hole of its
+diameter A. Either way the slot is cut n wide, the socket or
+slot is cut t min deep, and the end is left flat, as rolled.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Cheese head screw ISO 1207 - M5 x 20', without the property
+class
+standard 'ISO 1207' or 'ISO 14580'
+when the standard's table defines the screw, else empty: such a screw is
+custom
+d nominal diameter
+P pitch, coarse
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+dk head diameter at the bearing face, largest
+k head height, largest
+drive 'slot' or 'hexalobular'
+tool the screwdriver tip of ISO 2380-1, thickness by
+width, as '1.2 x 8'; empty for M1.6 to M3, which the source does
+not assign
+class property class or material, as '4.8',
+'A2', 'brass' or 'PA'
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by the standard's number when its table defines it:
+a length of the size's commercial range, with the thread form the table
+gives it. Every other screw is custom, its thread length written when
+shorter than l, as 'Cheese head screw M4 x 60 x 38'.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 205 to 207 (steel), 513 and 514 (stainless steel) and 630 and 631
+(brass, plastic): every article in sizes ISO 1207 defines. Left out:
+the sizes M1, M1.2 and M1.4. REYHER notes that its stainless screws are
+partly threaded from 60 long; they are taken here as the standard threads
+them.
+
+Heads, slots, thread lengths and lengths from ISO 1207:1992, read in
+IS 1366:2002, and ISO 14580:2011, read in GOST R ISO 14580-2012;
+screwdriver tips from Wera's assignment table (catalogue page 53,
+edition 11/04) to ISO 2380-1.
+
+See also:
+parts.screw.pan,
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 73
+Cheese head screws: slotted, ISO 1207, and hexalobular socket, ISO 14580.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 23
+parts.screw.countersunk
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 5686
+parts: C = parts.screw.countersunk ('data')
+parts: C = parts.screw.countersunk ('data', NAME)
+parts: C = parts.screw.countersunk ('data', NAME, L)
+parts: S = parts.screw.countersunk ('solid', NAME, L)
+parts: ... = parts.screw.countersunk (..., Name, Value)
+Countersunk head screws, ISO 10642, 2009, 7046 and 14581.
+
+C = parts.screw.countersunk ('data') returns every
+countersunk head screw in the catalogue as a struct array, one entry for
+each maker's article in each size and length, sorted by size and length.
+C = parts.screw.countersunk ('data', NAME)
+returns those of the thread NAME, such as 'M5', and
+C = parts.screw.countersunk ('data', NAME,
+L) those of nominal length L too: every article sold as that
+screw, each with its drive, property class or material and finish.
+Nothing is built.
+
+S = parts.screw.countersunk ('solid', NAME,
+L) builds the screw as a solid.Shape whether or not anyone
+sells it: any thread of a size its standard defines, any pitch, any
+length. The top of the head lies on the xy plane, flush with the
+surface it is sunk into, and the screw runs down to z = -L:
+the nominal length of a countersunk screw includes its head. A hexagon
+socket has two corners on the x axis, a hexalobular socket two
+lobes, a slot lies along it and a cross recess's wings on the x
+and y axes. S.Name holds the screw's designation.
+
+Name/Value pairs:
+
+'Drive'
+The drive, which selects the standard: 'hexsocket' (alias
+'allen'), ISO 10642, the default; 'slot', ISO 2009;
+'crossH' (alias 'phillips') or 'crossZ' (alias
+'pozidriv'), ISO 7046; 'hexalobular' (alias
+'torx'), ISO 14581. ISO 10642's head is larger than the one the
+other three share and its sizes run to M20, theirs to M10, so the drive
+changes more than the recess. For 'data' it keeps that drive's
+screws only; without it every drive comes.
+'Class'
+For 'solid' with a cross recess: the property class or
+material, which selects the part of ISO 7046: '4.8', the
+default, part 1; '8.8', a stainless steel such as 'A2',
+or a non-ferrous metal ('CU2', 'CU3', 'brass'),
+part 2. Any other class makes the screw custom. It changes the name
+only, the two parts sharing their heads.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L - k, or L to thread it to the
+head. Without it the screw follows its standard: threaded to the head
+up to the length its table gives, longer ones threaded b.
+'Detailed'
+For 'solid': true also builds the fillet of radius
+r between the cone and the shank, the true drive
+(parts.screw.__recess__) and the thread, cut by
+solid.Shape.thread; a screw threaded to the head is threaded to
+within k + a of the top, a being 3P for a
+hexagon socket and 2P for the rest. By default (false) the
+shank is a plain cylinder of diameter d and the drive the simple
+one. The end is left flat, as rolled.
+
+The head is the 90 degree cone of its standard, which reaches the
+theoretical diameter dkt at the top, cut by a cylinder of the
+actual head diameter dk: the edge, which the standards let be flat
+or rounded, is that cylinder.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon socket countersunk head screw ISO 10642 - M5 x 20',
+without the property class, a cross recess's type after the size
+standard the standard when its table defines the screw,
+else empty: such a screw is custom
+d nominal diameter
+P pitch, coarse
+l nominal length, the head included
+b length of thread from the end, l when threaded
+to the head
+dk actual head diameter, largest
+dkt theoretical head diameter, where the cone meets the
+top, d + 2k: the diameter a countersink is made to
+k head height, largest
+drive 'hexsocket', 'slot',
+'crossH', 'crossZ' or 'hexalobular'
+tool the key, bit or tip, as '3',
+'PH2', 'T25' or '1.2 x 6.5'
+class property class or material, as REYHER prints it:
+'08.8' and '010.9' mark the reduced loadability of
+ISO 10642's head
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by its standard's number when its table defines it:
+a length of the size's commercial range with the thread form the table
+gives it. Every other screw is custom, its thread length written when
+shorter than l. A cross recessed screw takes ISO 7046-1 or
+ISO 7046-2 by its class.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 225 to 227, 328, 329, 389 to 394 and 403 (steel), 522, 523, 562 to
+564 and 587 to 589 (stainless steel), 634 and 635 (brass, plastic): every
+article in sizes its standard defines. Left out: the sizes M1 to M1.4,
+the slotted M12 to M20 (DIN 963's, not ISO 2009's), the hexagon socket
+M22 and M24 (DIN 7991's, which ISO 10642 replaced) and the hexalobular
+article 10642.814, whose socket ISO 10642 does not define.
+
+ISO 2009:1994, ISO 7046-1:1994 and ISO 7046-2:1990, heads, recesses,
+thread lengths and lengths, read in IS 1365:2005 and IS 7485 Parts 1 and
+2:2005; ISO 7046-2's cross recess is its deep series, as part 1's, and
+its underhead shoulder is left out. ISO 10642:2004, read in GOST R ISO
+10642-2012, with the actual head diameters of Würth's, SFS's and
+Fabory's article pages. ISO 14581:2013, read in GOST R ISO 14581-2021
+and in its official preview, whose heads and sockets agree with fasten.it
+and fasteners.eu; its thread form from the preview, the same as ISO 2009's.
+Cross recesses to ISO 4757 and hexalobular sockets to ISO 10664;
+screwdriver tips from Wera's assignment table to ISO 2380-1.
+
+See also:
+parts.screw.cap,
+parts.screw.pan
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 57
+Countersunk head screws, ISO 10642, 2009, 7046 and 14581.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 15
+parts.screw.hex
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 5012
+parts: C = parts.screw.hex ('data')
+parts: C = parts.screw.hex ('data', NAME)
+parts: C = parts.screw.hex ('data', NAME, L)
+parts: S = parts.screw.hex ('solid', NAME, L)
+parts: ... = parts.screw.hex (..., Name, Value)
+Hexagon head bolts and screws, ISO 4014, 4017, 8765 and 8676, and hexagon
+flange bolts, ISO 4162.
+
+A bolt has a plain shank and a thread of length b (ISO 4014; with a
+fine thread, ISO 8765); a screw is threaded to the head (ISO 4017; with a
+fine thread, ISO 8676).
+
+C = parts.screw.hex ('data') returns every hexagon
+head bolt and screw in the catalogue as a struct array, one entry for each
+maker's article in each size and length, sorted by size, pitch and length.
+C = parts.screw.hex ('data', NAME) returns
+those of the thread NAME, a coarse thread as 'M10' or a fine
+one as 'M10x1.25', and
+C = parts.screw.hex ('data', NAME, L)
+those of nominal length L too: every article sold as that bolt or
+screw, each with its property class and finish. Nothing is built.
+
+S = parts.screw.hex ('solid', NAME, L)
+builds the bolt or screw as a solid.Shape whether or not anyone
+sells it: any thread whose head the standards define, any pitch, any
+length. The bearing face of the head lies on the xy plane, the
+head above it to z = k with two of its corners on the
+x axis, the shank below it to z = -L.
+S.Name holds the designation.
+
+Name/Value pairs:
+
+'FullThread'
+true for a screw threaded to the head, false for a bolt,
+the default for 'solid'. For 'data' it keeps that kind
+only; without it both come.
+'Flange'
+true for a hexagon flange bolt of ISO 4162, small series, M5 to
+M16: a hexagon s across flats and k high on a flange
+dc across and c thick, threaded to the head up to the length
+its table gives and b beyond. It takes no 'FullThread'.
+No maker's catalogue read so far sells it, so its 'data' is empty.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b of a bolt, from 0 to
+L. Without it a bolt takes the b its standard gives for the
+length (for 125 or less, up to 200, longer), the formula of ISO 888 where
+the standard gives none for the size, and a bolt shorter than its
+standard's lengths is threaded to the head.
+'Detailed'
+For 'solid': true builds the washer face, dw across
+and c high, the 30 degree chamfer on top of the head, starting at
+the flats, the fillet of radius r under the head, and the thread,
+cut by solid.Shape.thread; a screw's runs to within its run-out
+a of the head. By default (false) the head is a plain
+hexagonal prism and the shank a plain cylinder of diameter d. The
+point, which ISO 4753 governs, is left flat. A flange bolt's chamfer
+starts at the smallest circle ISO 4162 allows, 0.85 s, and its
+flange rises at 25 degrees from c thick at dw; its fillet
+and the bearing face's slight cone are left out.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon head bolt ISO 4014 - M12 x 80', without the property
+class
+standard the standard when its table defines the bolt
+or screw, else empty: such a one is custom
+d nominal diameter
+P pitch
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+s width across flats
+k head height, nominal
+grade product grade, 'A' or 'B'
+class property class or steel grade, as '8.8',
+'A4-70' or '25CrMo4'
+finish the finish as the maker names it, as
+'plain' or 'hot dip galvanized'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A bolt is designated by its standard's number when the standard's table
+defines it: the size, a length of its commercial range and the thread
+length its table gives; a screw likewise, threaded to the head. Every
+other one is custom, a bolt writing its thread length, as
+'Hexagon head bolt M10 x 110 x 32'. The product grade follows the
+standards: A for M24 and smaller up to 10 d or 150 long, whichever
+is shorter, B for the rest.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 236 to 271 (steel), 529 to 540 (stainless steel), 384 to 387 and
+372 to 374 (fine threads): every article of a plain bolt or screw,
+pressure vessel grades and hot dip galvanized ones included, in sizes the
+standards define. Left out: the sets sold with nuts (EN 15048 and the
+like), the size M7 and the fine threads M24 x 1.5 and M22 x 2, which none
+of the four standards defines. A bolt article in a length shorter than
+its standard's range is taken as threaded to the head, as REYHER notes
+and ISO 4014 recommends ISO 4017 there, and is custom.
+
+Dimensions from ISO 4014, 4017, 8765 and 8676, all 1999, Tables 1 and 2,
+read in IS 1364 Parts 1 and 2:2002, IS 13726:2002 and IS 13725:2002 with
+their corrigenda, which agree with REYHER's Technical Information
+(2019, TI-15); thread lengths beyond the tables from ISO 888:1976, read
+in IS 4206:1987; flange bolts from ISO 4162:1990, read in IS 15582:2005.
+
+See also:
+parts.screw.cap,
+parts.screw.set
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 97
+Hexagon head bolts and screws, ISO 4014, 4017, 8765 and 8676, and hexagon flange bolts, ISO 4162.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 18
+parts.screw.lowcap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3394
+parts: C = parts.screw.lowcap ('data')
+parts: C = parts.screw.lowcap ('data', NAME)
+parts: C = parts.screw.lowcap ('data', NAME, L)
+parts: S = parts.screw.lowcap ('solid', NAME, L)
+parts: ... = parts.screw.lowcap (..., Name, Value)
+Hexagon socket head cap screws with low head, DIN 7984.
+
+C = parts.screw.lowcap ('data') returns every low
+head cap screw in the catalogue as a struct array, one entry for each
+maker's article in each size and length, sorted by size and length.
+C = parts.screw.lowcap ('data', NAME) returns
+those of the thread NAME, such as 'M8', and
+C = parts.screw.lowcap ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its property class and finish. Nothing is built.
+
+S = parts.screw.lowcap ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread of a size the standard defines, any pitch, any length. The
+underside of the head lies on the xy plane, the head above it,
+the shank below it to z = -L, the hexagon socket sunk into
+the head with two of its corners on the x axis.
+S.Name holds the screw's designation.
+
+Name/Value pairs:
+
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L; L threads it to the head. Without it the
+screw follows DIN 7984: threaded to the head up to the length its table
+gives each size, longer ones threaded b, which depends on the
+length (125 or less, up to 200, longer).
+'Detailed'
+For 'solid': true also builds the fillet of radius
+r under the head and the thread, cut by solid.Shape.thread;
+a screw threaded to the head is threaded to within 3 P of it, as
+the standard puts its last full thread. By default (false) the
+shank is a plain cylinder of diameter d. Either way the socket is
+s across flats and t min deep, and the end is left flat.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation, as in
+'Hexagon socket head cap screw with low head DIN 7984 - M8 x
+20', without the property class
+standard 'DIN 7984' when its table defines the
+screw, else empty: such a screw is custom
+d nominal diameter
+P pitch, coarse
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+dk head diameter, largest
+k head height, largest
+drive 'hexsocket'
+tool the hexagon key, as '5'
+class property class, as the maker marks it: a leading
+0, as in '08.8', marks the reduced loadability of the low head
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by the standard's number when its table defines it:
+a length of the size's commercial range with the thread form the table
+gives it. Every other screw is custom, its thread length written when
+shorter than l.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 362 to 364: every article with a hexagon socket. Left out: the
+hexalobular article 07984.814, whose socket DIN 7984 does not define.
+
+Dimensions, thread lengths and lengths from DIN 7984:2009-06, Tabelle 1,
+read in a copy of its German text, which agrees with fasteners.eu in
+every thread form and thread length; fasteners.eu gives other ranges for
+some sizes, which an older edition explains.
+
+See also:
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 55
+Hexagon socket head cap screws with low head, DIN 7984.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 15
+parts.screw.pan
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4083
+parts: C = parts.screw.pan ('data')
+parts: C = parts.screw.pan ('data', NAME)
+parts: C = parts.screw.pan ('data', NAME, L)
+parts: S = parts.screw.pan ('solid', NAME, L)
+parts: ... = parts.screw.pan (..., Name, Value)
+Pan head screws, ISO 1580, 7045 and 14583.
+
+C = parts.screw.pan ('data') returns every pan head
+screw in the catalogue as a struct array, one entry for each maker's
+article in each size and length, sorted by size and length.
+C = parts.screw.pan ('data', NAME) returns
+those of the thread NAME, such as 'M5', and
+C = parts.screw.pan ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its drive, property class or material and finish. Nothing is
+built.
+
+S = parts.screw.pan ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread of a size its standard defines, any pitch, any length. The
+bearing face of the head lies on the xy plane, the head above it,
+the shank below it to z = -L; the slot lies along the
+x axis, a cross recess's wings on the x and y axes,
+a hexalobular socket's lobes with one on the x axis.
+S.Name holds the screw's designation.
+
+Name/Value pairs:
+
+'Drive'
+The drive, which selects the standard: 'hexalobular' (alias
+'torx'), ISO 14583, the default; 'slot', ISO 1580;
+'crossH' (alias 'phillips') or 'crossZ' (alias
+'pozidriv'), ISO 7045. For 'data' it keeps that drive's
+screws only; without it every drive comes.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L; L threads it to the head. Without it the
+screw follows its standard: threaded to the head up to the length its
+table gives, and longer ones threaded b min.
+'Detailed'
+For 'solid': true also builds the fillet of radius
+r under the head, for ISO 1580 the side's taper of 5 degrees,
+dk across at the bearing face, and the radius rf round the
+top, the true drive (parts.screw.__recess__), and the thread, cut
+by solid.Shape.thread; a screw threaded to the head is threaded
+to within a of it. By default (false) the shank is a plain
+cylinder of diameter d and the drive the simple one. The end is
+left flat, as rolled.
+
+The heads: ISO 1580's a flat top on a side dk across; ISO 7045's
+and ISO 14583's a dome of radius rf on a side dk across, the
+blend between them, which no standard dimensions, left sharp. ISO 14583
+gives the same dk, k and rf as ISO 7045.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Pan head screw ISO 7045 - M5 x 20 - Z', without the property
+class, a cross recess's type after the size
+standard the standard when its table defines the screw,
+else empty: such a screw is custom
+d nominal diameter
+P pitch, coarse
+l nominal length
+b length of thread from the end, l when threaded
+to the head
+dk head diameter, largest
+k head height, largest
+drive 'slot', 'crossH',
+'crossZ' or 'hexalobular'
+tool the bit or tip, as 'PH2', 'T25' or
+'1.2 x 8'
+class property class or material
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by its standard's number when its table defines it:
+a length of the size's commercial range with the thread form the table
+gives it. Every other screw is custom, its thread length written when
+shorter than l.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 326, 327, 403 (steel) and 520, 560 to 562, 590 (stainless steel):
+every article in sizes its standard defines.
+
+ISO 1580:1994 and ISO 7045:1994, heads, recesses, thread lengths and
+lengths, read in IS 6101:2005 and IS 7483:2005; ISO 14583:2011, read in
+its official preview, which agrees with GOST R ISO 14583-2009 (identical
+to ISO 14583:2001) and with fasten.it and fasteners.eu; cross recesses
+to ISO 4757 and hexalobular sockets to ISO 10664; screwdriver tips from
+Wera's assignment table to ISO 2380-1.
+
+See also:
+parts.screw.cheese,
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 42
+Pan head screws, ISO 1580, 7045 and 14583.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 29
+parts.screw.raisedcountersunk
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 4742
+parts: C = parts.screw.raisedcountersunk ('data')
+parts: C = parts.screw.raisedcountersunk ('data', NAME)
+parts: C = parts.screw.raisedcountersunk ('data', NAME, L)
+parts: S = parts.screw.raisedcountersunk ('solid', NAME, L)
+parts: ... = parts.screw.raisedcountersunk (..., Name, Value)
+Raised countersunk head screws, ISO 2010, 7047 and 14584.
+
+C = parts.screw.raisedcountersunk ('data') returns
+every raised countersunk head screw in the catalogue as a struct array,
+one entry for each maker's article in each size and length, sorted by
+size and length.
+C = parts.screw.raisedcountersunk ('data', NAME)
+returns those of the thread NAME, such as 'M5', and
+C = parts.screw.raisedcountersunk ('data', NAME,
+L) those of nominal length L too: every article sold as that
+screw, each with its drive, property class or material and finish.
+Nothing is built. The catalogue holds slotted and cross recessed screws
+only.
+
+S = parts.screw.raisedcountersunk ('solid', NAME,
+L) builds the screw as a solid.Shape whether or not anyone
+sells it: any thread of a size its standard defines, any pitch, any
+length. The edge of the head, where the cone meets the dome, lies on the
+xy plane, flush with the surface it is sunk into; the dome rises
+f above it and the screw runs down to z = -L: the
+nominal length includes the cone, not the dome. A hexalobular socket
+has two lobes on the x axis, a slot lies along it and a cross
+recess's wings on the x and y axes. S.Name
+holds the screw's designation.
+
+Name/Value pairs:
+
+'Drive'
+The drive, which selects the standard: 'hexalobular' (alias
+'torx'), ISO 14584, the default; 'slot', ISO 2010;
+'crossH' (alias 'phillips') or 'crossZ' (alias
+'pozidriv'), ISO 7047. For 'data' it keeps that drive's
+screws only; without it every drive comes.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'ThreadLength'
+For 'solid': the length of thread b from the end of the
+shank, from 0 to L - k, or L to thread it to the
+head. Without it the screw follows its standard: threaded to the head
+up to 30 long for M3 and smaller and 45 for the rest, longer ones
+threaded b min, 25 and 38.
+'Detailed'
+For 'solid': true also builds the fillet of radius
+r between the cone and the shank, the true drive
+(parts.screw.__recess__) and the thread, cut by
+solid.Shape.thread; a screw threaded to the head is threaded to
+within k + 2P of the edge. By default (false) the
+shank is a plain cylinder of diameter d and the drive the simple
+one. The end is left flat, as rolled.
+
+The head is the 90 degree cone of its standard, which reaches the
+theoretical diameter dkt at the edge, cut by a cylinder of the
+actual head diameter dk, with a dome on top that springs from
+dk and rises f; its radius, which the standards give as
+approximate, follows from the two. Drives are cut from the top of the
+dome, from which their depths are measured.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Countersunk raised head screw ISO 7047 - M5 x 20 - H', without
+the property class, a cross recess's type after the size
+standard the standard when its table defines the screw,
+else empty: such a screw is custom
+d nominal diameter
+P pitch, coarse
+l nominal length, from the edge of the head
+b length of thread from the end, l when threaded
+to the head
+dk actual head diameter, largest
+dkt theoretical head diameter, where the cone meets the
+plane of the edge, d + 2k: the diameter a countersink is
+made to
+k height of the cone, largest
+f height of the dome above the edge, approximate
+drive 'slot', 'crossH',
+'crossZ' or 'hexalobular'
+tool the bit or tip, as 'PH2', 'T25'
+or '1.2 x 6.5'
+class property class or material
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by its standard's number when its table defines it:
+a length of the size's commercial range with the thread form the table
+gives it. Every other screw is custom, its thread length written when
+shorter than l.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 227, 329 and 330 (steel), 524, 525, 564 and 565 (stainless steel),
+635 and 636 (brass): every article in sizes its standard defines.
+
+ISO 2010:1994 and ISO 7047:1994, heads, recesses, thread lengths and
+lengths, read in IS 8911:2005 and IS 7486:2005. ISO 14584:2011, read in
+its official preview, whose sockets agree with GOST R ISO 14584-2012 and
+fasten.it's reproduction; its head is ISO 7047's. Cross recesses to
+ISO 4757 and hexalobular sockets to ISO 10664; screwdriver tips from
+Wera's assignment table to ISO 2380-1.
+
+See also:
+parts.screw.countersunk,
+parts.screw.pan
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 57
+Raised countersunk head screws, ISO 2010, 7047 and 14584.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 15
+parts.screw.set
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3962
+parts: C = parts.screw.set ('data')
+parts: C = parts.screw.set ('data', NAME)
+parts: C = parts.screw.set ('data', NAME, L)
+parts: S = parts.screw.set ('solid', NAME, L)
+parts: ... = parts.screw.set (..., Name, Value)
+Hexagon socket set screws, ISO 4026, 4027, 4028 and 4029.
+
+C = parts.screw.set ('data') returns every set screw
+in the catalogue as a struct array, one entry for each maker's article in
+each size and length, sorted by size, pitch and length.
+C = parts.screw.set ('data', NAME) returns
+those of the thread NAME, such as 'M6' or 'M8x1',
+and C = parts.screw.set ('data', NAME, L)
+those of nominal length L too: every article sold as that screw,
+each with its point, property class and finish. Nothing is built.
+
+S = parts.screw.set ('solid', NAME, L)
+builds the screw as a solid.Shape whether or not anyone sells it:
+any thread of a size the standards define, any pitch, any length its
+point fits in. NAME names a coarse thread by its diameter,
+'M6', or any pitch, as 'M8x1'. The socket end lies on
+the xy plane, the screw below it to z = -L, the
+socket sunk into it with two of its corners on the x axis.
+S.Name holds the screw's designation.
+
+Name/Value pairs:
+
+'Point'
+The point, which selects the standard: 'flat', ISO 4026, the
+default; 'cone', ISO 4027; 'dog', ISO 4028;
+'cup', ISO 4029. For 'data' it keeps that point's screws
+only; without it every point comes.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true cuts the thread, by
+solid.Shape.thread, from the socket end to the point. By default
+(false) the screw is a plain cylinder of diameter d.
+
+Each standard gives a short screw, of a nominal length up to its table's
+shaded lengths, a shallower socket and wider angles than a long one.
+Either way the solid takes the standard's largest point diameters and
+dog length and its smallest socket depth t, and chamfers the socket
+end from the thread's minor diameter, d - 1.0825 P, at 90 degrees
+included, 120 for a short screw. The points:
+
+flat
+A flat end dp across, chamfered at 45 degrees.
+cone
+A cone of 90 degrees included, 120 for a short screw, its tip cut flat
+dt across.
+dog
+A cylinder dp across and z long, short or long as the screw,
+reached from the thread by a 45 degree chamfer; the slight radius at its
+end is left out.
+cup
+A 45 degree chamfer down to an edge dz across, round a conical cup of
+120 degrees.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon socket set screw ISO 4029 - M6 x 12', without the
+property class
+standard the standard, as 'ISO 4029', when its
+table defines the screw, else empty: such a screw is custom
+d nominal diameter
+P pitch
+l nominal length
+point 'flat', 'cone', 'dog' or
+'cup'
+drive 'hexsocket'
+tool the hexagon key, as '3'
+class property class or stainless steel grade, as
+'45H' or 'A4'; 'A1/A2' where the maker sells
+either
+finish the finish as the maker names it, as
+'plain' or 'zinc plated'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by its standard's number when the standard's table
+defines it: a coarse thread and a length of the table's commercial range.
+The four standards share one denomination, so a custom screw names its
+point instead, as 'Hexagon socket set screw with cone point M8x1 x
+20'.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 272 to 278 (steel) and 541 to 544 (stainless steel): every
+article in sizes the standards define, M1.6 to M24, fine pitches
+included. Left out: the size M14, which none of the four standards
+defines.
+
+Sockets, points and lengths from ISO 4026, 4027, 4028 and 4029, all
+2003, Table 1 and Figure 1 of each, read in IS 6094 Parts 1 to 4:2006,
+which agree with REYHER's Technical Information (2019, TI-20)
+but where REYHER drops a digit of t at M1.6 and M2.
+
+See also:
+parts.screw.cap
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 57
+Hexagon socket set screws, ISO 4026, 4027, 4028 and 4029.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 20
+parts.screw.shoulder
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3590
+parts: C = parts.screw.shoulder ('data')
+parts: C = parts.screw.shoulder ('data', DS)
+parts: C = parts.screw.shoulder ('data', DS, L)
+parts: S = parts.screw.shoulder ('solid', DS, L)
+parts: ... = parts.screw.shoulder (..., Name, Value)
+Hexagon socket head shoulder screws, ISO 7379.
+
+A shoulder screw is sized by its shoulder: diameter DS and length
+L, from the underside of the head to the end of the shoulder.
+
+C = parts.screw.shoulder ('data') returns every
+shoulder screw in the catalogue as a struct array, one entry for each
+maker's article in each size and length, sorted by shoulder diameter and
+length. C = parts.screw.shoulder ('data', DS)
+returns those of shoulder diameter DS, and
+C = parts.screw.shoulder ('data', DS, L)
+those of shoulder length L too: every article sold as that screw,
+each with its shank fit, property class and finish. Nothing is built.
+
+S = parts.screw.shoulder ('solid', DS, L)
+builds the screw as a solid.Shape whether or not anyone sells it.
+The underside of the head lies on the xy plane, the head above it,
+the shoulder below it to z = -L and the thread below that,
+b long; the socket is sunk into the head with two of its corners on
+the x axis. S.Name holds the screw's designation.
+
+Name/Value pairs:
+
+'Thread'
+For 'solid': the thread, as 'M8' or 'M8x1',
+whose head, socket and thread length the screw takes. Without it the
+thread is the one ISO 7379 gives DS; a shoulder diameter the
+standard does not list needs it.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true also cuts the undercut under the head,
+dg1 across and g1 wide with its 45 degree flank, the undercut
+at the end of the shoulder, dg2 across and g2 wide, and the
+thread, by solid.Shape.thread. By default (false) the
+shoulder and the thread are plain cylinders. The radii r1 and
+r2 and the chamfer at the end of the thread are left out.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of ISO 8991, as in
+'Hexagon socket head shoulder screw ISO 7379 - 10 x 40', without
+the property class
+standard 'ISO 7379' when the standard defines
+the screw, else empty: such a screw is custom
+ds shoulder diameter
+d thread diameter
+P pitch, coarse
+l shoulder length
+b thread length, largest
+dk head diameter, plain head, largest
+k head height, largest
+fit tolerance of the shoulder, 'f9' as
+ISO 7379 gives it or 'h8'
+drive 'hexsocket'
+tool the hexagon key, as '5'
+class property class or stainless steel grade
+finish the finish as the maker names it
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+A screw is designated by the standard's number when ISO 7379 defines it:
+a shoulder diameter of its table with the thread it gives, a shoulder of
+fit f9, and a length of the table's commercial range or of ISO 888 within
+it; the thread is then not written. Every other screw is custom and
+writes its thread, as 'Hexagon socket head shoulder screw 6-M5 x
+20'. The market's 6-M5 and 12-M10 are custom, the standard giving 6.5
+and 13.
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 342 (steel) and 571 (stainless steel): every article.
+
+Dimensions and commercial ranges of lengths from ISO 7379:1983, read in
+its official preview and in GOST 28962-91, which adopts it and agrees
+with it in every value used here. REYHER's Technical
+Information (2019, TI-13) gives the same heads, sockets and thread
+lengths, and the heads of the market's 6-M5 and 12-M10.
+
+See also:
+parts.screw.cap,
+parts.screw.set
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 46
+Hexagon socket head shoulder screws, ISO 7379.
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 18
+parts.washer.plain
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3179
+parts: C = parts.washer.plain ('data')
+parts: C = parts.washer.plain ('data', NAME)
+parts: S = parts.washer.plain ('solid', NAME)
+parts: ... = parts.washer.plain (..., Name, Value)
+Plain washers, product grade A: normal series, ISO 7089, and chamfered,
+ISO 7090, small series, ISO 7092, and large series, ISO 7093-1.
+
+C = parts.washer.plain ('data') returns every plain
+washer in the catalogue as a struct array, one entry for each maker's
+article in each size, sorted by size.
+C = parts.washer.plain ('data', NAME) returns
+those for the screw thread NAME, as 'M8': every article
+sold as that washer, each with its hardness class, material and finish.
+Nothing is built.
+
+S = parts.washer.plain ('solid', NAME) builds
+the washer as a solid.Shape, whether or not anyone sells it, in
+any size its standard defines: a ring d1 across inside, d2
+outside and h thick, lying on the xy plane with its axis on
+the z axis. S.Name holds the designation.
+
+Name/Value pairs:
+
+'Series'
+'normal', the default for 'solid', 'small' or
+'large'. For 'data' it keeps that series only; without
+it all come.
+'Chamfer'
+true for the chamfered washer of ISO 7090, normal series only,
+false for one without, the default for 'solid'. For
+'data' it keeps that kind only; without it both come.
+'Maker'
+For 'data': only that maker's articles, such as
+'REYHER', in any case.
+'Detailed'
+For 'solid': true chamfers a washer of ISO 7090 on the
+outside edge of its top face, at 30 degrees to the axis and h/4
+deep, the smallest chamfer the standard allows. By default
+(false) it is a plain ring. The other washers have no detail.
+
+Each entry is a struct with these fields, lengths in millimetres:
+
+designation the designation of the standard, as in
+'Washer ISO 7089 - 8', without the hardness class
+standard the standard
+d nominal size, the diameter of the screw thread
+d1 inside diameter, nominal, the smallest
+d2 outside diameter, nominal, the largest
+h thickness, nominal
+class hardness class, '200 HV' or
+'300 HV'; empty for a material the standards give none
+material 'steel', a stainless steel as
+'A2', or another as 'brass'
+finish the finish as the maker names it, as
+'plain' or 'zinc plated'
+maker the maker
+article the maker's article number
+source the catalogue and page the article was read from
+
+The catalogue
+
+Articles from REYHER, The Catalogue, edition 2020.04, English,
+pages 333 to 338 (steel), 567 to 570 (stainless steel) and 639 to 641
+(brass, copper, aluminium): every article of the four standards in sizes
+they define. Left out: the polyamide washers sold as ISO 7089 in
+product grade C, the large series of ISO 7093-2, grade C, and the
+articles of DIN 125, 433 and 9021, withdrawn and replaced by these
+standards.
+
+Dimensions from ISO 7089, 7090, 7092 and 7093-1, all 2000, Tables 1 and
+2: ISO 7089 and 7090 read in DIN EN ISO 7089 and 7090:2000, ISO 7092 and
+7093-1 in GOST ISO 7092-2016 and 7093-1-2016, all adopting them
+unchanged, and checked against the tolerances of ISO 4759-3:2000, read in
+IS 15274:2003; REYHER's Technical Information (2019, TI-84 and 85)
+agrees in every nominal dimension but its ISO 7093 column, which carries
+DIN 9021's.
+
+See also:
+parts.nut.hex,
+parts.screw.hex
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 135
+Plain washers, product grade A: normal series, ISO 7089, and chamfered, ISO 7090, small series, ISO 7092, and large series, ISO 7093-1.
+
+
+
+
+
