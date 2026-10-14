@@ -28,8 +28,8 @@
 ## @var{L}, from the underside of the head to the end of the shoulder.
 ##
 ## @code{@var{C} = parts.screw.shoulder (@qcode{'data'})} returns every
-## shoulder screw in the catalogue as a struct array, one entry for each
-## maker's article in each size and length, sorted by shoulder diameter and
+## shoulder screw in the catalogue as a table, one row for each maker's
+## article in each size and length, sorted by shoulder diameter and
 ## length.  @code{@var{C} = parts.screw.shoulder (@qcode{'data'}, @var{DS})}
 ## returns those of shoulder diameter @var{DS}, and
 ## @code{@var{C} = parts.screw.shoulder (@qcode{'data'}, @var{DS}, @var{L})}
@@ -65,10 +65,11 @@
 ## @var{r2} and the chamfer at the end of the thread are left out.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Hexagon socket head shoulder screw ISO 7379 - 10 x 40'}, without
 ## the property class
 ## @item @code{standard} @tab @qcode{'ISO 7379'} when the standard defines
@@ -83,12 +84,12 @@
 ## @item @code{fit} @tab tolerance of the shoulder, @qcode{'f9'} as
 ## ISO 7379 gives it or @qcode{'h8'}
 ## @item @code{drive} @tab @qcode{'hexsocket'}
-## @item @code{tool} @tab the hexagon key, as @qcode{'5'}
+## @item @code{tool} @tab hexagon key, as @qcode{'5'}
 ## @item @code{class} @tab property class or stainless steel grade
-## @item @code{finish} @tab the finish as the maker names it
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{finish} @tab finish as the maker names it
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by the standard's number when ISO 7379 defines it:
@@ -252,19 +253,19 @@ function C = catalogue (DS, L, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (DS))
-    keep &= [E.ds] == DS;
+    keep &= E.ds == DS;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (DS))
       what = sprintf ("%g ", DS);
@@ -329,14 +330,36 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([ds, d, h(:,3), l, h(:,4:6)]), fit, ...
-       repmat({'hexsocket'}, n, 1), tool, A(a,4:5), ...
-       repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'ds', 'd', 'P', 'l', ...
-                       'b', 'dk', 'k', 'fit', 'drive', 'tool', 'class', ...
-                       'finish', 'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([ds, l], [1, 2]);
-  E = E(k);
+  drive = repmat ({'hexsocket'}, n, 1);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, ds, d, h(:,3), l, h(:,4), h(:,5), h(:,6), fit, ...
+             drive, tool, A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'ds', 'd', 'P', ...
+                                'l', 'b', 'dk', 'k', 'fit', 'drive', 'tool', ...
+                                'class', 'finish', 'maker', 'article', ...
+                                'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', '', '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'ISO 7379 when the standard defines the screw', ...
+    'shoulder diameter', ...
+    'thread diameter', ...
+    'pitch, coarse', ...
+    'shoulder length', ...
+    'thread length, largest', ...
+    'head diameter, plain head, largest', ...
+    'head height, largest', ...
+    'tolerance of the shoulder', ...
+    'hexsocket', ...
+    'hexagon key', ...
+    'property class or stainless steel grade', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Hexagon socket head shoulder screws, ISO 7379';
+  E = sortrows (E, {'ds', 'l'});
 
 endfunction
 
@@ -415,31 +438,39 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.shoulder ('data');
-%! assert_equal (numel (C), 118);
+%! assert_equal (height (C), 118);
+%!test  # sorted by shoulder diameter, then length
+%! C = parts.screw.shoulder ('data');
+%! assert_equal (issorted ([C.ds, C.l], 'rows'), true);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.shoulder ('data', 10, 40);
-%! E = C(strcmp ({C.article}, '07379.204'));
-%! assert_equal ({E.designation, E.fit, E.class, E.tool}, ...
-%!               {'Hexagon socket head shoulder screw ISO 7379 - 10 x 40', ...
-%!                'f9', '12.9', '5'});
+%! E = C(strcmp (C.article, '07379.204'),:);
+%! assert_equal ([E.designation, E.fit, E.class, E.tool], ...
+%!               {['Hexagon socket head shoulder screw ISO 7379', ...
+%!                 ' - 10 x 40'], 'f9', '12.9', '5'});
 %!test  # its sizes
 %! C = parts.screw.shoulder ('data', 10, 40);
-%! E = C(strcmp ({C.article}, '07379.204'));
+%! E = C(strcmp (C.article, '07379.204'),:);
 %! assert_equal ([E.ds, E.d, E.P, E.l, E.b, E.dk, E.k], ...
 %!               [10, 8, 1.25, 40, 13.25, 16, 7]);
+%!test  # each variable carries its unit and description
+%! C = parts.screw.shoulder ('data', 10, 40);
+%! assert_equal (C.Properties.VariableUnits([3, 6]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{3}, 'shoulder diameter');
 %!test  # a shoulder of fit h8 is custom
 %! C = parts.screw.shoulder ('data', 10, 40);
-%! E = C(strcmp ({C.article}, '07379.200'));
-%! assert_equal ({E.designation, E.standard}, ...
-%!               {'Hexagon socket head shoulder screw 10-M8 x 40', ''});
+%! E = C(strcmp (C.article, '07379.200'),:);
+%! assert_equal ([E.designation, E.standard], ...
+%!               {'Hexagon socket head shoulder screw 10-M8 x 40', ...
+%!                ''});
 %!test  # the market's 6-M5 is custom
 %! C = parts.screw.shoulder ('data', 6, 20, 'Maker', 'reyher');
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Hexagon socket head shoulder screw 6-M5 x 20'});
 %!test  # an intermediate length of ISO 888
 %! C = parts.screw.shoulder ('data', 8, 45);
-%! E = C(strcmp ({C.fit}, 'f9'));
-%! assert_equal (E.standard, 'ISO 7379');
+%! E = C(strcmp (C.fit, 'f9'),:);
+%! assert_equal (E.standard, {'ISO 7379'});
 %!testif ; exist ('__occt__') == 3  # head, shoulder and thread, socket
 %! S = parts.screw.shoulder ('solid', 10, 40);
 %! V = pi * (8 ^ 2 * 7 + 5 ^ 2 * 40 + 4 ^ 2 * 13.25) ...

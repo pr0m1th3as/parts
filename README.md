@@ -22,12 +22,15 @@ sizes their makers' catalogues list. It offers:
   materials.
 
 The solids come from the [`drafting`](https://github.com/pr0m1th3as/drafting)
-package, which this one depends on.
+package and the tables from the
+[`datatypes`](https://github.com/pr0m1th3as/datatypes) package, which this one
+depends on.
 
 ## Install
 
-To install the latest release, you need Octave (>=11.1.0) and the
-[`drafting`](https://github.com/pr0m1th3as/drafting) package (>=0.2.2)
+To install the latest release, you need Octave (>=11.1.0), the
+[`drafting`](https://github.com/pr0m1th3as/drafting) package (>=0.2.2) and the
+[`datatypes`](https://github.com/pr0m1th3as/datatypes) package (>=1.5.0)
 installed on your system. Install the **parts** package by typing:
 
   `pkg install parts`
@@ -45,9 +48,10 @@ After installation, type:
 
 ## Usage
 
-Each part comes two ways from one call. With `'data'` it is a struct array of
-the catalogue's dimensions and ratings, one entry per article or size, for a
-calculation; with `'solid'` it is a `solid.Shape` of the part, placed by a
+Each part comes two ways from one call. With `'data'` it is a table of the
+catalogue's dimensions and ratings, one row per article or size, for a
+calculation, each variable with its unit and description, which `summary`
+lists; with `'solid'` it is a `solid.Shape` of the part, placed by a
 fixed convention, for an assembly, an interference check or a STEP or 3MF
 file, plain by default or with `'Detailed', true` its finer form, threads
 included. Every value is read from a maker's published catalogue or the
@@ -62,22 +66,12 @@ The catalogue entry of a 6205 bearing:
 ```
 >> bearing = parts.bearing.deepgroove ('data', '6205')
 bearing =
+  1x13 table
 
-  scalar structure containing the fields:
+    designation    d     D     B     r     da      Da     ra      C       C0     nlim     mass           source
+    ___________    __    __    __    _    ____    ____    __    _____    ____    _____    ____    _____________________
 
-    designation = 6205
-    d = 25
-    D = 52
-    B = 15
-    r = 1
-    da = 30.600
-    Da = 46.400
-    ra = 1
-    C = 14800
-    C0 = 7800
-    nlim = 18000
-    mass = 0.1300
-    source = SKF 17000, p. 272
+    {'6205'   }    25    52    15    1    30.6    46.4     1    14800    7800    18000    0.13    {'SKF 17000, p. 272'}
 ```
 
 Its solid, the two rings and the balls:
@@ -89,29 +83,27 @@ S =
   solid.Shape: 10 solids, 29 faces, 62 edges
 ```
 
-Every article sold as an M5 x 20 socket head cap screw:
+Every article sold as an M5 x 20 socket head cap screw, by class and finish:
 
 ```
->> screws = parts.screw.cap ('data', 'M5', 20)
-screws =
+>> screws = parts.screw.cap ('data', 'M5', 20);
+>> screws(:, {'article', 'class', 'finish'})
+ans =
+  10x3 table
 
-  1x10 struct array containing the fields:
+       article          class                 finish
+    _____________    ___________    __________________________
 
-    designation
-    standard
-    d
-    P
-    l
-    b
-    dk
-    k
-    drive
-    tool
-    class
-    finish
-    maker
-    article
-    source
+    {'04762.800'}    {'8.8'    }    {'plain'                 }
+    {'04762.810'}    {'8.8'    }    {'zinc plated'           }
+    {'04762.317'}    {'8.8'    }    {'zinc plated 8 TLP'     }
+    {'04762.428'}    {'8.8'    }    {'zinc plated 8 TLP + SL'}
+    {'04762.100'}    {'10.9'   }    {'plain'                 }
+    {'04762.110'}    {'10.9'   }    {'zinc plated, baked'    }
+    {'04762.200'}    {'12.9'   }    {'plain'                 }
+    {'04762.920'}    {'A2-70'  }    {'plain'                 }
+    {'04762.940'}    {'A4-70'  }    {'plain'                 }
+    {'04762.941'}    {'BUMAX88'}    {'plain'                 }
 ```
 
 The screw's solid, with its socket and thread:
@@ -123,32 +115,16 @@ S =
   solid.Shape: 1 solid, 43 faces, 111 edges, named
 ```
 
-A heat-set insert's sizes and the hole it needs:
+A heat-set insert from each maker that sells it, with the hole it needs:
 
 ```
 >> insert = parts.insert.heatset ('data', 'M4', 8.1)
 insert =
+  2x12 table
 
-  scalar structure containing the fields:
+    designation     thread    d     L     d1     d2     d3      t      w          maker             article                                   source
+    ____________    ______    _    ___    ___    ___    ___    ___    ___    _______________    ________________    __________________________________________________________
 
-    designation = M4 x 8.1
-    thread = M4
-    d = 4
-    L = 8.1000
-    d1 = 6.3000
-    d2 = 5.5000
-    d3 = 5.6000
-    t = 9.1000
-    w = 2.1000
-    makers =
-    {
-      [1,1] = ruthex
-      [1,2] = CNC Kitchen
-    }
-
-    source =
-    {
-      [1,1] = ruthex, RX series product data sheet, 15.08.2022, p. 1
-      [1,2] = CNC Kitchen, Dimensions & Design Guidelines, 2025-06
-    }
+    {'M4 x 8.1'}    {'M4'}    4    8.1    6.3    5.5    5.6    9.1    2.1    {'ruthex'     }    {'GE-M4x81-001'}    {'ruthex, RX series product data sheet, 15.08.2022, p. 1'}
+    {'M4 x 8.1'}    {'M4'}    4    8.1    6.3    NaN    5.7    9.1    2.1    {'CNC Kitchen'}    {''            }    {'CNC Kitchen, Dimensions & Design Guidelines, 2025-06'  }
 ```

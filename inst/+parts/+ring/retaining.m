@@ -25,8 +25,8 @@
 ## for bores, DIN 472, each of the normal and the heavy type.
 ##
 ## @code{@var{C} = parts.ring.retaining (@qcode{'data'})} returns every
-## retaining ring in the catalogue as a struct array, one entry for each
-## maker's article in each size, sorted by diameter.
+## retaining ring in the catalogue as a table, one row for each maker's
+## article in each size, sorted by diameter.
 ## @code{@var{C} = parts.ring.retaining (@qcode{'data'}, @var{D1})} returns
 ## those for a shaft or bore of diameter @var{D1}: every article sold as
 ## that ring, each with its material and finish, and the groove to cut for
@@ -67,10 +67,11 @@
 ## @var{b} wide on @var{d3}, without a gap.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of the standard, as in
+## @item @code{designation} @tab designation of the standard, as in
 ## @qcode{'Retaining ring DIN 471 - 50 x 2'}
 ## @item @code{standard} @tab @qcode{'DIN 471'} or @qcode{'DIN 472'}
 ## @item @code{type} @tab @qcode{'normal'} or @qcode{'heavy'}
@@ -91,11 +92,11 @@
 ## bore, smallest
 ## @item @code{material} @tab @qcode{'spring steel'} or a stainless steel
 ## by its number, as @qcode{'1.4122'}
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'zinc flake'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## @subheading The catalogue
@@ -473,22 +474,22 @@ function C = catalogue (D1, bore, bybore, heavy, byheavy, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (D1))
-    keep &= [E.d1] == D1;
+    keep &= E.d1 == D1;
   endif
   if (bybore)
-    keep &= strcmp ({E.standard}, 'DIN 472') == bore;
+    keep &= strcmp (E.standard, 'DIN 472') == bore;
   endif
   if (byheavy)
-    keep &= strcmp ({E.type}, 'heavy') == heavy;
+    keep &= strcmp (E.type, 'heavy') == heavy;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (D1))
       what = sprintf ("%g mm ", D1);
@@ -583,14 +584,40 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, std, type, num2cell(h), A(a,4:5), ...
-       repmat({'REYHER'}, numel (a), 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'type', 'd1', 's', 'd3', ...
-                       'a', 'b', 'd5', 'd4', 'd2', 'm', 't', 'n', ...
-                       'material', 'finish', 'maker', 'article', ...
-                       'source'}, 1)';
-  [~, k] = sort (d1);
-  E = E(k);
+  maker = repmat ({'REYHER'}, numel (a), 1);
+  E = table (name, std, type, h(:,1), h(:,2), h(:,3), h(:,4), h(:,5), ...
+             h(:,6), h(:,7), h(:,8), h(:,9), h(:,10), h(:,11), A(a,4), ...
+             A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'type', 'd1', ...
+                                's', 'd3', 'a', 'b', 'd5', 'd4', 'd2', 'm', ...
+                                't', 'n', 'material', 'finish', 'maker', ...
+                                'article', 'source'};
+  E.Properties.VariableUnits = {'', '', '', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', 'mm', 'mm', 'mm', 'mm', 'mm', '', '', ...
+                                '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of the standard', ...
+    'DIN 471 or DIN 472', ...
+    'normal or heavy', ...
+    'diameter of the shaft or the bore', ...
+    'thickness of the ring, nominal', ...
+    'diameter of the free ring, nominal', ...
+    'radial height of the lugs, largest', ...
+    'radial width of the ring opposite the gap, about', ...
+    'diameter of the holes in the lugs, smallest', ...
+    'diameter the fitted ring sweeps, the room it needs', ...
+    'diameter of the groove, nominal', ...
+    'width of the groove, smallest (H13)', ...
+    'depth of the groove', ...
+    ['distance from the groove to the end of the shaft', ...
+     ' or bore, smallest'], ...
+    'material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Retaining rings, with the grooves they sit in';
+  E = sortrows (E, 'd1');
 
 endfunction
 
@@ -661,56 +688,61 @@ endfunction
 
 %!test  # a ring for a 50 mm shaft
 %! C = parts.ring.retaining ('data', 50, 'Bore', false, 'Heavy', false);
-%! E = C(strcmp ({C.article}, '00471.000'));
-%! assert_equal ({E.designation, E.type, E.material, E.finish}, ...
+%! E = C(strcmp (C.article, '00471.000'),:);
+%! assert_equal ([E.designation, E.type, E.material, E.finish], ...
 %!               {'Retaining ring DIN 471 - 50 x 2', 'normal', ...
 %!                'spring steel', 'plain'});
 %!test  # the ring
 %! C = parts.ring.retaining ('data', 50, 'Bore', false, 'Heavy', false);
-%! E = C(strcmp ({C.article}, '00471.000'));
+%! E = C(strcmp (C.article, '00471.000'),:);
 %! assert_equal ([E.d1, E.s, E.d3, E.a, E.b, E.d5, E.d4], ...
 %!               [50, 2, 45.8, 6.9, 5.1, 2.5, 64.5]);
 %!test  # its groove
 %! C = parts.ring.retaining ('data', 50, 'Bore', false, 'Heavy', false);
-%! E = C(strcmp ({C.article}, '00471.000'));
+%! E = C(strcmp (C.article, '00471.000'),:);
 %! assert_equal ([E.d2, E.m, E.t, E.n], [47, 2.15, 1.5, 4.5]);
 %!test  # its source
 %! C = parts.ring.retaining ('data', 50, 'Bore', false, 'Heavy', false);
-%! E = C(strcmp ({C.article}, '00471.000'));
-%! assert_equal (E.source, 'REYHER, The Catalogue, 2020.04, p. 89');
+%! E = C(strcmp (C.article, '00471.000'),:);
+%! assert_equal (E.source, {'REYHER, The Catalogue, 2020.04, p. 89'});
+%!test  # each variable carries its unit and description
+%! C = parts.ring.retaining ('data', 50);
+%! assert_equal (C.Properties.VariableUnits([4, 11]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{11}, ...
+%!               'diameter of the groove, nominal');
 %!test  # a ring for a 50 mm bore
 %! C = parts.ring.retaining ('data', 50, 'Bore', true);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Retaining ring DIN 472 - 50 x 2'});
 %!test  # its groove
 %! C = parts.ring.retaining ('data', 50, 'Bore', true);
-%! assert_equal ([C(1).d3, C(1).d2, C(1).t], [54.2, 53, 1.5]);
+%! assert_equal ([C.d3(1), C.d2(1), C.t(1)], [54.2, 53, 1.5]);
 %!test  # the heavy type
 %! C = parts.ring.retaining ('data', 50, 'Heavy', true);
-%! assert_equal ({C.designation, C.type}, ...
+%! assert_equal ([C.designation, C.type], ...
 %!               {'Retaining ring DIN 471 - 50 x 3', 'heavy'});
 %!test  # without the options both kinds and types come
 %! C = parts.ring.retaining ('data', 50);
-%! assert_equal (unique ({C.designation}), ...
-%!               {'Retaining ring DIN 471 - 50 x 2', ...
-%!                'Retaining ring DIN 471 - 50 x 3', ...
+%! assert_equal (unique (C.designation), ...
+%!               {'Retaining ring DIN 471 - 50 x 2'; ...
+%!                'Retaining ring DIN 471 - 50 x 3'; ...
 %!                'Retaining ring DIN 472 - 50 x 2'});
 %!test  # a footnote changes the material of the large sizes
 %! C = parts.ring.retaining ('data', 120, 'Bore', true);
-%! E = C(strcmp ({C.article}, '00472.300'));
-%! assert_equal (E.material, '1.4310');
+%! E = C(strcmp (C.article, '00472.300'),:);
+%! assert_equal (E.material, {'1.4310'});
 %!test  # a heavy ring's d4
 %! C = parts.ring.retaining ('data', 20, 'Heavy', true, 'Bore', false);
-%! assert_equal (C(1).d4, 31.6);
+%! assert_equal (C.d4(1), 31.6);
 %!test  # no d4 where the sources give none
 %! C = parts.ring.retaining ('data', 92, 'Bore', false);
 %! assert_equal (isnan (C.d4), true);
 %!test  # sorted by diameter
 %! C = parts.ring.retaining ('data');
-%! assert_equal (issorted ([C.d1]), true);
+%! assert_equal (issorted (C.d1), true);
 %!test  # 'Maker' in any case
 %! C = parts.ring.retaining ('data', 20, 'Maker', 'reyher');
-%! assert_equal (unique ({C.maker}), {'REYHER'});
+%! assert_equal (unique (C.maker), {'REYHER'});
 %!testif ; exist ('__occt__') == 3  # a flat ring for a shaft
 %! S = parts.ring.retaining ('solid', 50);
 %! assert_equal (volume (S), pi * (28 ^ 2 - 22.9 ^ 2) * 2, 1e-6);

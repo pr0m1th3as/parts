@@ -25,8 +25,8 @@
 ## Pan head screws, ISO 1580, 7045 and 14583.
 ##
 ## @code{@var{C} = parts.screw.pan (@qcode{'data'})} returns every pan head
-## screw in the catalogue as a struct array, one entry for each maker's
-## article in each size and length, sorted by size and length.
+## screw in the catalogue as a table, one row for each maker's article in
+## each size and length, sorted by size and length.
 ## @code{@var{C} = parts.screw.pan (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, such as @qcode{'M5'}, and
 ## @code{@var{C} = parts.screw.pan (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -79,13 +79,14 @@
 ## blend between them, which no standard dimensions, left sharp.  ISO 14583
 ## gives the same @var{dk}, @var{k} and @var{rf} as ISO 7045.
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Pan head screw ISO 7045 - M5 x 20 - Z'}, without the property
 ## class, a cross recess's type after the size
-## @item @code{standard} @tab the standard when its table defines the screw,
+## @item @code{standard} @tab standard when its table defines the screw,
 ## else empty: such a screw is custom
 ## @item @code{d} @tab nominal diameter
 ## @item @code{P} @tab pitch, coarse
@@ -96,13 +97,13 @@
 ## @item @code{k} @tab head height, largest
 ## @item @code{drive} @tab @qcode{'slot'}, @qcode{'crossH'},
 ## @qcode{'crossZ'} or @qcode{'hexalobular'}
-## @item @code{tool} @tab the bit or tip, as @qcode{'PH2'}, @qcode{'T25'} or
+## @item @code{tool} @tab bit or tip, as @qcode{'PH2'}, @qcode{'T25'} or
 ## @qcode{'1.2 x 8'}
 ## @item @code{class} @tab property class or material
-## @item @code{finish} @tab the finish as the maker names it
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{finish} @tab finish as the maker names it
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by its standard's number when its table defines it:
@@ -359,26 +360,26 @@ function C = catalogue (NAME, d, P, L, drive, bydrive, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     T = sizes ('slot');
     if (isnan (P) && any (T(:,1) == d))
       P = T(T(:,1) == d,2);
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (bydrive)
-    keep &= strcmp ({E.drive}, drive);
+    keep &= strcmp (E.drive, drive);
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -534,13 +535,32 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, h(:,2), l, b, h(:,3:4)]), drive, ...
-       tool, A(a,4:5), repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       'dk', 'k', 'drive', 'tool', 'class', 'finish', ...
-                       'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, l], [1, 2]);
-  E = E(k);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, h(:,2), l, b, h(:,3), h(:,4), drive, tool, ...
+             A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 'dk', 'k', 'drive', 'tool', 'class', ...
+                                'finish', 'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'standard when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch, coarse', ...
+    'nominal length', ...
+    'length of thread from the end', ...
+    'head diameter, largest', ...
+    'head height, largest', ...
+    'slot, crossH, crossZ or hexalobular', ...
+    'bit or tip', ...
+    'property class or material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Pan head screws, ISO 1580, 7045 and 14583';
+  E = sortrows (E, {'d', 'l'});
 
 endfunction
 
@@ -616,41 +636,46 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.pan ('data');
-%! assert_equal (numel (C), 787);
+%! assert_equal (height (C), 787);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.pan ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '07045.404'));
-%! assert_equal ({E.designation, E.class, E.finish, E.tool, E.drive}, ...
-%!               {'Pan head screw ISO 7045 - M5 x 20 - H', '4.8', 'plain', ...
-%!                'PH2', 'crossH'});
+%! E = C(strcmp (C.article, '07045.404'),:);
+%! assert_equal ([E.designation, E.class, E.finish, E.tool, E.drive], ...
+%!               {'Pan head screw ISO 7045 - M5 x 20 - H', '4.8', ...
+%!                'plain', 'PH2', 'crossH'});
 %!test  # its sizes
 %! C = parts.screw.pan ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '07045.404'));
+%! E = C(strcmp (C.article, '07045.404'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.dk, E.k], [5, 0.8, 20, 20, 9.5, 3.7]);
+%!test  # each variable carries its unit and description
+%! C = parts.screw.pan ('data', 'M5', 20);
+%! assert_equal (C.Properties.VariableUnits([3, 7]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{7}, ...
+%!               'head diameter, largest');
 %!test  # without 'Drive' every drive comes
 %! C = parts.screw.pan ('data', 'M5', 20);
-%! assert_equal (unique ({C.drive}), ...
+%! assert_equal (unique (C.drive)', ...
 %!               {'crossH', 'crossZ', 'hexalobular', 'slot'});
 %!test  # 'Drive' keeps one, by its alias
 %! C = parts.screw.pan ('data', 'M5', 20, 'Drive', 'Pozidriv');
-%! assert_equal (unique ({C.designation, C.tool}), ...
+%! assert_equal (unique ([C.designation; C.tool])', ...
 %!               {'PZ2', 'Pan head screw ISO 7045 - M5 x 20 - Z'});
 %!test  # a slotted screw, ISO 1580
 %! C = parts.screw.pan ('data', 'M5', 20, 'Drive', 'slot');
-%! assert_equal ({C(1).designation, C(1).tool}, ...
+%! assert_equal ([C.designation(1), C.tool(1)], ...
 %!               {'Pan head screw ISO 1580 - M5 x 20', '1.2 x 8'});
 %!test  # a hexalobular screw, ISO 14583
 %! C = parts.screw.pan ('data', 'M5', 20, 'Drive', 'torx');
-%! assert_equal ({C(1).designation, C(1).tool}, ...
-%!               {'Hexalobular socket pan head screw ISO 14583 - M5 x 20', ...
-%!                'T25'});
+%! assert_equal ([C.designation(1), C.tool(1)], ...
+%!               {['Hexalobular socket pan head screw ISO 14583', ...
+%!                 ' - M5 x 20'], 'T25'});
 %!test  # ISO 7045 threads M3 x 30 b min, ISO 14583 to the head
 %! C = parts.screw.pan ('data', 'M3', 30);
-%! assert_equal (unique ([C(strcmp ({C.drive}, 'crossH')).b, ...
-%!                        C(strcmp ({C.drive}, 'hexalobular')).b]), [25, 30]);
+%! assert_equal (unique ([C.b(strcmp (C.drive, 'crossH')); ...
+%!                        C.b(strcmp (C.drive, 'hexalobular'))])', [25, 30]);
 %!test  # a length past the table is custom
 %! C = parts.screw.pan ('data', 'M4', 50, 'Drive', 'phillips');
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Pan head screw M4 x 50 x 38 - H'});
 %!testif ; exist ('__occt__') == 3  # hexalobular by default: dome, round hole
 %! S = parts.screw.pan ('solid', 'M5', 20);

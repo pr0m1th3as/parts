@@ -25,8 +25,8 @@
 ## Socket head cap screws, ISO 4762 and ISO 14579.
 ##
 ## @code{@var{C} = parts.screw.cap (@qcode{'data'})} returns every cap screw
-## in the catalogue as a struct array, one entry for each maker's article in
-## each size and length, sorted by size and length.
+## in the catalogue as a table, one row for each maker's article in each
+## size and length, sorted by size and length.
 ## @code{@var{C} = parts.screw.cap (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, such as @qcode{'M5'}, and
 ## @code{@var{C} = parts.screw.cap (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -75,10 +75,11 @@
 ## flat, its chamfer not given by the sources.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Hexagon socket head cap screw ISO 4762 - M5 x 20'}, without the
 ## property class
 ## @item @code{standard} @tab @qcode{'ISO 4762'} or @qcode{'ISO 14579'}
@@ -92,15 +93,15 @@
 ## @item @code{dk} @tab head diameter, plain head, largest
 ## @item @code{k} @tab head height, largest
 ## @item @code{drive} @tab @qcode{'hexsocket'} or @qcode{'hexalobular'}
-## @item @code{tool} @tab the key or bit, as @qcode{'4'} or @qcode{'T30'}
+## @item @code{tool} @tab key or bit, as @qcode{'4'} or @qcode{'T30'}
 ## @item @code{class} @tab property class or stainless steel grade, as
 ## @qcode{'12.9'} or @qcode{'A2-70'}; a grade alone, @qcode{'A2'}, where
 ## the maker's class depends on production
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'zinc plated'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by its standard's number only when the standard's
@@ -342,22 +343,22 @@ function C = catalogue (NAME, d, P, L, drive, bydrive, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
-    keep &= [E.d] == d & (isnan (P) | [E.P] == P);
+    keep &= E.d == d & (isnan (P) | E.P == P);
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (bydrive)
-    keep &= strcmp ({E.drive}, drive);
+    keep &= strcmp (E.drive, drive);
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -833,13 +834,32 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, h(:,2), l, b, h(:,3:4)]), drive, ...
-       tool, A(a,4:5), repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       'dk', 'k', 'drive', 'tool', 'class', 'finish', ...
-                       'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, l], [1, 2]);
-  E = E(k);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, h(:,2), l, b, h(:,3), h(:,4), drive, tool, ...
+             A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 'dk', 'k', 'drive', 'tool', 'class', ...
+                                'finish', 'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'ISO 4762 or ISO 14579 when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch, coarse', ...
+    'nominal length', ...
+    'length of thread from the end', ...
+    'head diameter, plain head, largest', ...
+    'head height, largest', ...
+    'hexsocket or hexalobular', ...
+    'key or bit', ...
+    'property class or stainless steel grade', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Socket head cap screws, ISO 4762 and ISO 14579';
+  E = sortrows (E, {'d', 'l'});
 
 endfunction
 
@@ -899,74 +919,82 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.cap ('data');
-%! assert_equal (numel (C), 4064);
+%! assert_equal (height (C), 4064);
 %!test  # sorted by size, then length
 %! C = parts.screw.cap ('data');
-%! assert_equal (issorted ([C.d]), true);
+%! assert_equal (issorted ([C.d, C.l], 'rows'), true);
 %!test  # an article as REYHER lists it: its designation
 %! C = parts.screw.cap ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '04762.800'));
+%! E = C(strcmp (C.article, '04762.800'),:);
 %! assert_equal (E.designation, ...
-%!               'Hexagon socket head cap screw ISO 4762 - M5 x 20');
+%!               {'Hexagon socket head cap screw ISO 4762 - M5 x 20'});
 %!test  # its size, threaded to the head, and its head
 %! C = parts.screw.cap ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '04762.800'));
+%! E = C(strcmp (C.article, '04762.800'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.dk, E.k], [5, 0.8, 20, 20, 8.5, 5]);
 %!test  # its drive, class and finish
 %! C = parts.screw.cap ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '04762.800'));
-%! assert_equal ({E.drive, E.tool, E.class, E.finish}, ...
+%! E = C(strcmp (C.article, '04762.800'),:);
+%! assert_equal ([E.drive, E.tool, E.class, E.finish], ...
 %!               {'hexsocket', '4', '8.8', 'plain'});
 %!test  # its maker and page
 %! C = parts.screw.cap ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '04762.800'));
-%! assert_equal ({E.maker, E.source}, ...
+%! E = C(strcmp (C.article, '04762.800'),:);
+%! assert_equal ([E.maker, E.source], ...
 %!               {'REYHER', 'REYHER, The Catalogue, 2020.04, p. 286'});
 %!test  # every article sold as M5 x 20
 %! C = parts.screw.cap ('data', 'M5', 20);
-%! assert_equal ({C.article}, {'04762.800', '04762.810', '04762.317', ...
-%!                             '04762.428', '04762.100', '04762.110', ...
-%!                             '04762.200', '04762.920', '04762.940', ...
-%!                             '04762.941'});
+%! assert_equal (C.article', {'04762.800', '04762.810', '04762.317', ...
+%!                            '04762.428', '04762.100', '04762.110', ...
+%!                            '04762.200', '04762.920', '04762.940', ...
+%!                            '04762.941'});
+%!test  # each variable carries its unit and description
+%! C = parts.screw.cap ('data', 'M5', 20);
+%! assert_equal (C.Properties.VariableUnits([3, 7]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{7}, ...
+%!               'head diameter, plain head, largest');
 %!test  # a length of Table 1 with a plain shank
 %! C = parts.screw.cap ('data', 'M5', 40);
-%! assert_equal ({C(1).standard, C(1).b}, {'ISO 4762', 22});
+%! assert_equal (C.standard(1), {'ISO 4762'});
+%! assert_equal (C.b(1), 22);
 %!test  # a length beyond Table 1 is custom, its thread length written
 %! C = parts.screw.cap ('data', 'M5', 60);
-%! assert_equal ({C(1).designation, C(1).standard, C(1).b}, ...
-%!               {'Hexagon socket head cap screw M5 x 60 x 22', '', 22});
+%! assert_equal ([C.designation(1), C.standard(1)], ...
+%!               {'Hexagon socket head cap screw M5 x 60 x 22', ''});
+%! assert_equal (C.b(1), 22);
 %!test  # a full thread Table 1 does not give is custom
 %! C = parts.screw.cap ('data', 'M8', 60);
-%! E = C(strcmp ({C.article}, '04762.388'));
-%! assert_equal ({E.designation, E.b}, ...
-%!               {'Hexagon socket head cap screw M8 x 60', 60});
+%! E = C(strcmp (C.article, '04762.388'),:);
+%! assert_equal (E.designation, ...
+%!               {'Hexagon socket head cap screw M8 x 60'});
+%! assert_equal (E.b, 60);
 %!test  # a length below Table 1's, page 286
 %! C = parts.screw.cap ('data', 'M4', 4);
-%! assert_equal (any (strcmp ({C.article}, '04762.800')), true);
+%! assert_equal (any (strcmp (C.article, '04762.800')), true);
 %!test  # a stainless size whose class depends on production
 %! C = parts.screw.cap ('data', 'M1.6', 4);
-%! assert_equal ({C.article; C.class}, {'04762.200', '04762.920'; ...
-%!                                      '12.9', 'A2'});
+%! assert_equal ([C.article, C.class], ...
+%!               {'04762.200', '12.9'; '04762.920', 'A2'});
 %!test  # the hexalobular articles
 %! C = parts.screw.cap ('data', 'M6', 16, 'Drive', 'torx');
-%! assert_equal ({C.article}, {'14579.810', '00912.814'});
+%! assert_equal (C.article', {'14579.810', '00912.814'});
 %!test  # ISO 14579 screws by their standard
 %! C = parts.screw.cap ('data', 'M6', 16, 'Drive', 'hexalobular');
-%! assert_equal ({C(1).designation, C(1).tool}, ...
-%!               {'Hexalobular socket head cap screw ISO 14579 - M6 x 16', ...
-%!                'T30'});
+%! assert_equal ([C.designation(1), C.tool(1)], ...
+%!               {['Hexalobular socket head cap screw ISO 14579', ...
+%!                 ' - M6 x 16'], 'T30'});
 %!test  # without 'Drive' both drives come
 %! C = parts.screw.cap ('data', 'M6', 16);
-%! assert_equal (numel (C), 17);
+%! assert_equal (height (C), 17);
 %!test  # 'Drive' in any case
 %! C = parts.screw.cap ('data', 'M6', 16, 'Drive', 'TORX');
-%! assert_equal (numel (C), 2);
+%! assert_equal (height (C), 2);
 %!test  # 'Drive' keeps one
 %! C = parts.screw.cap ('data', 'M6', 16, 'Drive', 'allen');
-%! assert_equal (numel (C), 15);
+%! assert_equal (height (C), 15);
 %!test  # 'Maker' in any case
 %! C = parts.screw.cap ('data', 'M6', 16, 'Maker', 'reyher');
-%! assert_equal (numel (C), 17);
+%! assert_equal (height (C), 17);
 %!testif ; exist ('__occt__') == 3  # the head above the plane, the shank below
 %! S = parts.screw.cap ('solid', 'M5', 20);
 %! assert_equal (bbox (S), [-4.25, -4.25, -20, 4.25, 4.25, 5], 1e-6);

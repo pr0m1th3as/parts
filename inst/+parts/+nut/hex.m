@@ -26,8 +26,8 @@
 ## a non-metallic insert, regular, ISO 7040, and thin, ISO 10511.
 ##
 ## @code{@var{C} = parts.nut.hex (@qcode{'data'})} returns every hexagon nut
-## in the catalogue as a struct array, one entry for each maker's article in
-## each size, sorted by size and pitch.
+## in the catalogue as a table, one row for each maker's article in each
+## size, sorted by size and pitch.
 ## @code{@var{C} = parts.nut.hex (@qcode{'data'}, @var{NAME})} returns those
 ## of the thread @var{NAME}, a coarse thread as @qcode{'M10'} or a fine one
 ## as @qcode{'M10x1.25'}: every article sold as that nut, each with its
@@ -68,13 +68,14 @@
 ## its collar and insert to the maker.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Hexagon regular nut ISO 4032 - M12'}, without the property class
-## @item @code{standard} @tab the standard when its table defines the nut,
-## else empty: such a nut is custom
+## @item @code{standard} @tab standard when its table defines the nut, else
+## empty: such a nut is custom
 ## @item @code{d} @tab nominal diameter
 ## @item @code{P} @tab pitch
 ## @item @code{s} @tab width across flats, nominal
@@ -88,11 +89,11 @@
 ## above
 ## @item @code{class} @tab property class or material, as @qcode{'8'},
 ## @qcode{'A4-70'} or @qcode{'brass'}
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'hot dip galvanized'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A nut is designated by its standard's number when the standard's table
@@ -426,7 +427,7 @@ function C = catalogue (NAME, d, P, thin, bythin, locking, bylocking, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     if (isnan (P))
       T = sizes ('regular');
@@ -434,9 +435,9 @@ function C = catalogue (NAME, d, P, thin, bythin, locking, bylocking, maker)
         P = T(T(:,1) == d,2);
       endif
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
-  kind = {E.standard};
+  kind = E.standard;
   if (bythin)
     keep &= ismember (kind, {'ISO 4035', 'ISO 8675', 'ISO 10511'}) == thin;
   endif
@@ -444,11 +445,11 @@ function C = catalogue (NAME, d, P, thin, bythin, locking, bylocking, maker)
     keep &= ismember (kind, {'ISO 7040', 'ISO 10511'}) == locking;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -716,13 +717,34 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, stds(j)', num2cell(h(:,[1:6, 7, 8])), grade, A(a,4:5), ...
-       repmat({'REYHER'}, numel (a), 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 's', 'e', ...
-                       'm', 'h', 'dw', 'da', 'grade', 'class', 'finish', ...
-                       'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows (h(:,1:2), [1, 2]);
-  E = E(k);
+  standard = stds(j)';
+  maker = repmat ({'REYHER'}, numel (a), 1);
+  E = table (name, standard, h(:,1), h(:,2), h(:,3), h(:,4), h(:,5), h(:,6), ...
+             h(:,7), h(:,8), grade, A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 's', ...
+                                'e', 'm', 'h', 'dw', 'da', 'grade', 'class', ...
+                                'finish', 'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', 'mm', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'standard when its table defines the nut', ...
+    'nominal diameter', ...
+    'pitch', ...
+    'width across flats, nominal', ...
+    'width across corners, smallest', ...
+    'height of the thread', ...
+    'overall height, largest', ...
+    'diameter of the bearing face, smallest', ...
+    'diameter of the countersink, largest', ...
+    'product grade', ...
+    'property class or material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Hexagon nuts';
+  E = sortrows (E, {'d', 'P'});
 
 endfunction
 
@@ -763,80 +785,88 @@ endfunction
 
 %!test  # every entry has its standard's dimensions
 %! C = parts.nut.hex ('data');
-%! assert_equal (all (cellfun (@(x) ! isempty (x), {C.standard})), true);
+%! assert_equal (any (cellfun (@isempty, C.standard)), false);
 %!test  # an M12 regular nut
 %! C = parts.nut.hex ('data', 'M12', 'Thin', false, 'Locking', false);
-%! E = C(strcmp ({C.article}, '04032.800'));
-%! assert_equal ({E.designation, E.grade, E.class, E.finish}, ...
-%!               {'Hexagon regular nut ISO 4032 - M12', 'A', '8', 'plain'});
+%! E = C(strcmp (C.article, '04032.800'),:);
+%! assert_equal ([E.designation, E.grade, E.class, E.finish], ...
+%!               {'Hexagon regular nut ISO 4032 - M12', 'A', '8', ...
+%!                'plain'});
 %!test  # its dimensions
 %! C = parts.nut.hex ('data', 'M12');
-%! E = C(strcmp ({C.article}, '04032.800'));
+%! E = C(strcmp (C.article, '04032.800'),:);
 %! assert_equal ([E.d, E.P, E.s, E.e, E.m, E.h, E.dw, E.da], ...
 %!               [12, 1.75, 18, 20.03, 10.8, 10.8, 16.6, 13]);
 %!test  # its source
 %! C = parts.nut.hex ('data', 'M12');
-%! E = C(strcmp ({C.article}, '04032.800'));
-%! assert_equal (E.source, 'REYHER, The Catalogue, 2020.04, p. 280');
+%! E = C(strcmp (C.article, '04032.800'),:);
+%! assert_equal (E.source, {'REYHER, The Catalogue, 2020.04, p. 280'});
+%!test  # each variable carries its unit and description
+%! C = parts.nut.hex ('data', 'M12');
+%! assert_equal (C.Properties.VariableUnits([3, 9]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{9}, ...
+%!               'diameter of the bearing face, smallest');
 %!test  # a fine thread, ISO 8673
 %! C = parts.nut.hex ('data', 'M16x1.5', 'Thin', false);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Hexagon regular nut ISO 8673 - M16x1.5'});
 %!test  # its bearing face
 %! C = parts.nut.hex ('data', 'M16x1.5');
-%! assert_equal (unique ([C.dw]), 22.49);
+%! assert_equal (unique (C.dw), 22.49);
 %!test  # a thin nut, ISO 4035
 %! C = parts.nut.hex ('data', 'M10', 'Thin', true, 'Locking', false);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Hexagon thin nut ISO 4035 - M10'});
 %!test  # its height
 %! C = parts.nut.hex ('data', 'M10', 'Thin', true, 'Locking', false);
 %! assert_equal (unique ([C.m, C.h]), 5);
 %!test  # a prevailing torque nut, ISO 7040
 %! C = parts.nut.hex ('data', 'M8', 'Locking', true, 'Thin', false);
-%! assert_equal (unique ({C.designation}), ...
-%!               {'Prevailing torque type hexagon regular nut ISO 7040 - M8'});
+%! assert_equal (unique (C.designation), ...
+%!               {['Prevailing torque type hexagon regular nut', ...
+%!                 ' ISO 7040 - M8']});
 %!test  # its heights
 %! C = parts.nut.hex ('data', 'M8', 'Locking', true, 'Thin', false);
-%! assert_equal ([C(1).m, C(1).h], [6.44, 9.5]);
+%! assert_equal ([C.m(1), C.h(1)], [6.44, 9.5]);
 %!test  # a thin prevailing torque nut, ISO 10511
 %! C = parts.nut.hex ('data', 'M6', 'Locking', true, 'Thin', true);
-%! assert_equal (unique ({C.designation}), ...
-%!               {'Prevailing torque type hexagon thin nut ISO 10511 - M6'});
+%! assert_equal (unique (C.designation), ...
+%!               {['Prevailing torque type hexagon thin nut', ...
+%!                 ' ISO 10511 - M6']});
 %!test  # a thin nut with a fine thread, ISO 8675
 %! C = parts.nut.hex ('data', 'M16x1.5', 'Thin', true);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Hexagon thin nut ISO 8675 - M16x1.5'});
 %!test  # its height
 %! C = parts.nut.hex ('data', 'M16x1.5', 'Thin', true);
 %! assert_equal (unique ([C.m, C.h]), 8);
 %!test  # 'Thin' alone keeps both thin kinds
 %! C = parts.nut.hex ('data', 'M6', 'Thin', true);
-%! assert_equal (unique ({C.standard}), {'ISO 10511', 'ISO 4035'});
+%! assert_equal (unique (C.standard), {'ISO 10511'; 'ISO 4035'});
 %!test  # 'Locking' alone keeps both prevailing torque kinds
 %! C = parts.nut.hex ('data', 'M6', 'Locking', true);
-%! assert_equal (unique ({C.standard}), {'ISO 10511', 'ISO 7040'});
+%! assert_equal (unique (C.standard), {'ISO 10511'; 'ISO 7040'});
 %!test  # a footnote changes the class of the small sizes
 %! C = parts.nut.hex ('data', 'M5');
-%! E = C(strcmp ({C.article}, '04032.359'));
-%! assert_equal (E.class, '6');
+%! E = C(strcmp (C.article, '04032.359'),:);
+%! assert_equal (E.class, {'6'});
 %!test  # and of the large ones
 %! C = parts.nut.hex ('data', 'M30');
-%! E = C(strcmp ({C.article}, '04032.926'));
-%! assert_equal (E.class, 'A2-50');
+%! E = C(strcmp (C.article, '04032.926'),:);
+%! assert_equal (E.class, {'A2-50'});
 %!test  # starred stainless rows carry no strength number
 %! C = parts.nut.hex ('data', 'M3');
-%! E = C(strcmp ({C.article}, '04032.920'));
-%! assert_equal (E.class, 'A2');
+%! E = C(strcmp (C.article, '04032.920'),:);
+%! assert_equal (E.class, {'A2'});
 %!test  # grades
 %! C = parts.nut.hex ('data', 'M20');
-%! assert_equal (unique ({C.grade}), {'B'});
+%! assert_equal (unique (C.grade), {'B'});
 %!test  # sorted by size, then pitch
 %! C = parts.nut.hex ('data');
-%! assert_equal (issorted ([C.d]), true);
+%! assert_equal (issorted ([C.d, C.P], 'rows'), true);
 %!test  # 'Maker' in any case
 %! C = parts.nut.hex ('data', 'M8', 'Maker', 'reyher');
-%! assert_equal (unique ({C.maker}), {'REYHER'});
+%! assert_equal (unique (C.maker), {'REYHER'});
 %!testif ; exist ('__occt__') == 3  # a plain prism with its bore
 %! S = parts.nut.hex ('solid', 'M10');
 %! V = 3 * sqrt (3) / 2 * (16 / sqrt (3)) ^ 2 * 8.4 - pi * 25 * 8.4;

@@ -25,8 +25,8 @@
 ## ISO 7090, small series, ISO 7092, and large series, ISO 7093-1.
 ##
 ## @code{@var{C} = parts.washer.plain (@qcode{'data'})} returns every plain
-## washer in the catalogue as a struct array, one entry for each maker's
-## article in each size, sorted by size.
+## washer in the catalogue as a table, one row for each maker's article in
+## each size, sorted by size.
 ## @code{@var{C} = parts.washer.plain (@qcode{'data'}, @var{NAME})} returns
 ## those for the screw thread @var{NAME}, as @qcode{'M8'}: every article
 ## sold as that washer, each with its hardness class, material and finish.
@@ -62,12 +62,13 @@
 ## (@code{false}) it is a plain ring.  The other washers have no detail.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of the standard, as in
+## @item @code{designation} @tab designation of the standard, as in
 ## @qcode{'Washer ISO 7089 - 8'}, without the hardness class
-## @item @code{standard} @tab the standard
+## @item @code{standard} @tab standard
 ## @item @code{d} @tab nominal size, the diameter of the screw thread
 ## @item @code{d1} @tab inside diameter, nominal, the smallest
 ## @item @code{d2} @tab outside diameter, nominal, the largest
@@ -76,11 +77,11 @@
 ## @qcode{'300 HV'}; empty for a material the standards give none
 ## @item @code{material} @tab @qcode{'steel'}, a stainless steel as
 ## @qcode{'A2'}, or another as @qcode{'brass'}
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'zinc plated'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## @subheading The catalogue
@@ -259,11 +260,11 @@ function C = catalogue (NAME, d, series, byseries, chamfer, bychamfer, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
-    keep &= [E.d] == d;
+    keep &= E.d == d;
   endif
-  std = {E.standard};
+  std = E.standard;
   if (byseries)
     switch (series)
       case 'normal'
@@ -278,11 +279,11 @@ function C = catalogue (NAME, d, series, byseries, chamfer, bychamfer, maker)
     keep &= strcmp (std, 'ISO 7090') == chamfer;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -433,13 +434,29 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, std, num2cell(h), A(a,4:6), repmat({'REYHER'}, numel (a), 1), ...
-       A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'd1', 'd2', 'h', ...
-                       'class', 'material', 'finish', 'maker', 'article', ...
-                       'source'}, 1)';
-  [~, k] = sort (d);
-  E = E(k);
+  maker = repmat ({'REYHER'}, numel (a), 1);
+  E = table (name, std, h(:,1), h(:,2), h(:,3), h(:,4), A(a,4), A(a,5), ...
+             A(a,6), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'd1', 'd2', ...
+                                'h', 'class', 'material', 'finish', 'maker', ...
+                                'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', '', '', '', ...
+                                '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of the standard, without the hardness class', ...
+    'standard', ...
+    'nominal size, the diameter of the screw thread', ...
+    'inside diameter, nominal, the smallest', ...
+    'outside diameter, nominal, the largest', ...
+    'thickness, nominal', ...
+    'hardness class', ...
+    'material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Plain washers, product grade A';
+  E = sortrows (E, 'd');
 
 endfunction
 
@@ -471,51 +488,56 @@ endfunction
 %!test  # an M8 washer of the normal series
 %! C = parts.washer.plain ('data', 'M8', 'Series', 'normal', ...
 %!                         'Chamfer', false);
-%! E = C(strcmp ({C.article}, '07089.000'));
-%! assert_equal ({E.designation, E.class, E.material, E.finish}, ...
+%! E = C(strcmp (C.article, '07089.000'),:);
+%! assert_equal ([E.designation, E.class, E.material, E.finish], ...
 %!               {'Washer ISO 7089 - 8', '200 HV', 'steel', 'plain'});
 %!test  # its dimensions
 %! C = parts.washer.plain ('data', 'M8');
-%! E = C(strcmp ({C.article}, '07089.000'));
+%! E = C(strcmp (C.article, '07089.000'),:);
 %! assert_equal ([E.d, E.d1, E.d2, E.h], [8, 8.4, 16, 1.6]);
 %!test  # its source
 %! C = parts.washer.plain ('data', 'M8');
-%! E = C(strcmp ({C.article}, '07089.000'));
-%! assert_equal (E.source, 'REYHER, The Catalogue, 2020.04, p. 333');
+%! E = C(strcmp (C.article, '07089.000'),:);
+%! assert_equal (E.source, {'REYHER, The Catalogue, 2020.04, p. 333'});
+%!test  # each variable carries its unit and description
+%! C = parts.washer.plain ('data', 'M8');
+%! assert_equal (C.Properties.VariableUnits([3, 6]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{5}, ...
+%!               'outside diameter, nominal, the largest');
 %!test  # chamfered, ISO 7090
 %! C = parts.washer.plain ('data', 'M10', 'Chamfer', true);
-%! assert_equal (unique ({C.designation}), {'Washer ISO 7090 - 10'});
+%! assert_equal (unique (C.designation), {'Washer ISO 7090 - 10'});
 %!test  # the small series, ISO 7092
 %! C = parts.washer.plain ('data', 'M10', 'Series', 'small');
-%! assert_equal (unique ([C.d2]), 18);
+%! assert_equal (unique (C.d2), 18);
 %!test  # the large series, ISO 7093-1
 %! C = parts.washer.plain ('data', 'M10', 'Series', 'large');
-%! assert_equal ({C(1).designation, C(1).d2, C(1).h}, ...
-%!               {'Washer ISO 7093-1 - 10', 30, 2.5});
+%! assert_equal (C.designation(1), {'Washer ISO 7093-1 - 10'});
+%! assert_equal ([C.d2(1), C.h(1)], [30, 2.5]);
 %!test  # the normal series holds both kinds
 %! C = parts.washer.plain ('data', 'M10', 'Series', 'normal');
-%! assert_equal (unique ({C.standard}), {'ISO 7089', 'ISO 7090'});
+%! assert_equal (unique (C.standard), {'ISO 7089'; 'ISO 7090'});
 %!test  # a hardened washer
 %! C = parts.washer.plain ('data', 'M10');
-%! E = C(strcmp ({C.article}, '07089.004'));
-%! assert_equal (E.class, '300 HV');
+%! E = C(strcmp (C.article, '07089.004'),:);
+%! assert_equal (E.class, {'300 HV'});
 %!test  # a material with no hardness class
 %! C = parts.washer.plain ('data', 'M5');
-%! E = C(strcmp ({C.article}, '07089.700'));
-%! assert_equal ({E.class, E.material}, {'', 'brass'});
+%! E = C(strcmp (C.article, '07089.700'),:);
+%! assert_equal ([E.class, E.material], {'', 'brass'});
 %!test  # a stainless one
 %! C = parts.washer.plain ('data', 'M5');
-%! E = C(strcmp ({C.article}, '07089.924'));
-%! assert_equal ({E.class, E.material}, {'200 HV', 'A2'});
+%! E = C(strcmp (C.article, '07089.924'),:);
+%! assert_equal ([E.class, E.material], {'200 HV', 'A2'});
 %!test  # above M36 the hole differs from DIN 125's
 %! C = parts.washer.plain ('data', 'M42');
-%! assert_equal (unique ([C.d1]), 45);
+%! assert_equal (unique (C.d1), 45);
 %!test  # sorted by size
 %! C = parts.washer.plain ('data');
-%! assert_equal (issorted ([C.d]), true);
+%! assert_equal (issorted (C.d), true);
 %!test  # 'Maker' in any case
 %! C = parts.washer.plain ('data', 'M8', 'Maker', 'reyher');
-%! assert_equal (unique ({C.maker}), {'REYHER'});
+%! assert_equal (unique (C.maker), {'REYHER'});
 %!testif ; exist ('__occt__') == 3  # a plain ring
 %! S = parts.washer.plain ('solid', 'M8');
 %! assert_equal (volume (S), pi * (8 ^ 2 - 4.2 ^ 2) * 1.6, 1e-6);

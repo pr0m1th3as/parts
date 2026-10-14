@@ -18,16 +18,18 @@
 ## -*- texinfo -*-
 ## @deftypefn  {parts} {@var{P} =} parts.dowel (@qcode{'data'})
 ## @deftypefnx {parts} {@var{P} =} parts.dowel (@qcode{'data'}, @var{D})
+## @deftypefnx {parts} {@var{P} =} parts.dowel (@qcode{'data'}, @var{D}, @var{L})
 ## @deftypefnx {parts} {@var{S} =} parts.dowel (@qcode{'solid'}, @var{D}, @var{L})
 ## @deftypefnx {parts} {@var{S} =} parts.dowel (@dots{}, @var{Name}, @var{Value})
 ##
 ## Parallel dowel pins to ISO 8734, hardened.
 ##
-## @code{@var{P} = parts.dowel (@qcode{'data'})} returns every diameter in
-## the catalogue as a struct array, smallest first.
-## @code{@var{P} = parts.dowel (@qcode{'data'}, @var{D})} returns the one of
-## diameter @var{D} millimetres, with the lengths in stock.  Nothing is
-## built.
+## @code{@var{P} = parts.dowel (@qcode{'data'})} returns every pin in the
+## catalogue as a table, one row for each diameter and length in stock,
+## smallest first.  @code{@var{P} = parts.dowel (@qcode{'data'}, @var{D})}
+## returns the pins of diameter @var{D} millimetres, one for each length in
+## stock, and @code{@var{P} = parts.dowel (@qcode{'data'}, @var{D},
+## @var{L})} the one @var{L} long.  Nothing is built.
 ##
 ## @code{@var{S} = parts.dowel (@qcode{'solid'}, @var{D}, @var{L})} builds
 ## the pin of diameter @var{D} as a @code{solid.Shape} @var{L} long, whether
@@ -42,15 +44,16 @@
 ## at 15 degrees.  By default (@code{false}) the pin is a plain cylinder.
 ## @end table
 ##
-## Each diameter is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{P})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.12 0.88
 ## @item @code{d} @tab nominal diameter, toleranced m6
-## @item @code{c} @tab the chamfer at each end, approximate
-## @item @code{l} @tab the lengths in stock, a row vector
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the pin was read from
+## @item @code{l} @tab length
+## @item @code{c} @tab chamfer at each end, approximate
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and pages the pin was read from
 ## @end multitable
 ##
 ## @subheading The catalogue
@@ -88,9 +91,6 @@ function OUT = dowel (MODE, varargin)
       args(1) = [];
     endif
   endif
-  if (strcmp (MODE, 'data') && ! isempty (L))
-    error ("parts.dowel: 'data' takes a diameter D only.");
-  endif
   if (strcmp (MODE, 'solid') && isempty (L))
     error ("parts.dowel: a solid needs a diameter D and a length L.");
   endif
@@ -119,6 +119,58 @@ function OUT = dowel (MODE, varargin)
     endswitch
   endfor
 
+  P = catalogue ();
+  if (isempty (D))
+    OUT = P;
+    return;
+  endif
+  if (! isnumeric (D) || ! isreal (D) || ! isscalar (D))
+    error ("parts.dowel: D must be a real scalar.");
+  endif
+  P = P(abs (P.d - D) < 1e-9, :);
+  if (height (P) == 0)
+    error ("parts.dowel: no %g mm dowel in the catalogue.", D);
+  endif
+  if (! isempty (L)
+      && (! isnumeric (L) || ! isreal (L) || ! isscalar (L) || ! isfinite (L)))
+    error ("parts.dowel: L must be a real scalar.");
+  endif
+  if (strcmp (MODE, 'data'))
+    if (! isempty (L))
+      P = P(abs (P.l - L) < 1e-9, :);
+      if (height (P) == 0)
+        error ("parts.dowel: no %g x %g mm dowel in the catalogue.", D, L);
+      endif
+    endif
+    OUT = P;
+    return;
+  endif
+
+  c = P.c(1);
+  if (L <= 2 * c)
+    error ("parts.dowel: a %g mm dowel must be longer than %g mm.", D, 2 * c);
+  endif
+  r = D / 2;
+  if (! detailed)
+    OUT = solid.cylinder (r, L);
+  else
+    q = r - c * tand (15);
+    R = geom.Region ([0, 0; q, 0; r, c; r, L - c; q, L; 0, L]);
+    R.UCS = geom.UCS ([0, -1, 0], [0, 0, 0]);
+    OUT = solid.revolve (R);
+  endif
+
+endfunction
+
+## The catalogue as a table, built on the first call and kept for the session
+function P = catalogue ()
+
+  persistent C;
+  if (! isempty (C))
+    P = C;
+    return;
+  endif
+
   ## d, c; then the lengths REYHER stocks
   T = {1, 0.2, [4, 5, 6, 8, 10, 12];
        1.5, 0.3, [4, 5, 6, 8, 10, 12, 14, 16, 20];
@@ -133,66 +185,61 @@ function OUT = dowel (MODE, varargin)
        12, 2.5, [20, 24:2:32, 36, 40:5:60, 70:10:120];
        16, 3, [30, 40:5:60, 70:10:120];
        20, 3.5, [40, 50, 60, 80, 100, 120]};
-  src = "REYHER, The Catalogue, 2020.04, pp. 374-375";
-  M = repmat ({'REYHER', '08734.001', src}, rows (T), 1);
-  P = cell2struct ([T, M]', {'d', 'c', 'l', 'maker', 'article', 'source'}, 1);
-  if (isempty (D))
-    OUT = P;
-    return;
-  endif
-
-  if (! isnumeric (D) || ! isreal (D) || ! isscalar (D))
-    error ("parts.dowel: D must be a real scalar.");
-  endif
-  k = find (abs ([T{:,1}] - D) < 1e-9);
-  if (isempty (k))
-    error ("parts.dowel: no %g mm dowel in the catalogue.", D);
-  endif
-  P = P(k);
-  if (strcmp (MODE, 'data'))
-    OUT = P;
-    return;
-  endif
-
-  if (! isnumeric (L) || ! isreal (L) || ! isscalar (L) || ! isfinite (L))
-    error ("parts.dowel: L must be a real scalar.");
-  endif
-  if (L <= 2 * P.c)
-    error ("parts.dowel: a %g mm dowel must be longer than %g mm.", D, ...
-           2 * P.c);
-  endif
-  r = P.d / 2;
-  if (! detailed)
-    OUT = solid.cylinder (r, L);
-  else
-    q = r - P.c * tand (15);
-    R = geom.Region ([0, 0; q, 0; r, P.c; r, L - P.c; q, L; 0, L]);
-    R.UCS = geom.UCS ([0, -1, 0], [0, 0, 0]);
-    OUT = solid.revolve (R);
-  endif
+  n = cellfun (@numel, T(:,3));
+  k = repelem ((1:rows (T))', n);
+  d = [T{:,1}]';
+  c = [T{:,2}]';
+  maker = repmat ({'REYHER'}, sum (n), 1);
+  article = repmat ({'08734.001'}, sum (n), 1);
+  source = repmat ({'REYHER, The Catalogue, 2020.04, pp. 374-375'}, ...
+                   sum (n), 1);
+  C = table (d(k), [T{:,3}]', c(k), maker, article, source);
+  C.Properties.VariableNames = {'d', 'l', 'c', 'maker', 'article', 'source'};
+  C.Properties.VariableUnits = {'mm', 'mm', 'mm', '', '', ''};
+  C.Properties.VariableDescriptions = {...
+    'nominal diameter, toleranced m6', ...
+    'length', ...
+    'chamfer at each end, approximate', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and pages the pin was read from'};
+  C.Properties.Description = 'Parallel dowel pins to ISO 8734, hardened';
+  P = C;
 
 endfunction
 
-%!test  # every diameter, smallest first
+%!test  # every pin, smallest first
 %! P = parts.dowel ('data');
-%! assert_equal ([P.d], [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20]);
-%!test  # one diameter with its chamfer
+%! assert_equal (unique (P.d)', ...
+%!               [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20]);
+%!test  # one row for each length in stock
+%! P = parts.dowel ('data');
+%! assert_equal (height (P), 197);
+%!test  # sorted by diameter, then length
+%! P = parts.dowel ('data');
+%! assert_equal (issorted ([P.d, P.l], 'rows'), true);
+%!test  # one diameter, its lengths in stock
 %! P = parts.dowel ('data', 6);
-%! assert_equal (P.c, 1.2);
-%!test  # its lengths in stock
+%! assert_equal (P.l', [8:2:32, 36, 40:5:60, 70:10:100]);
+%!test  # its chamfer on every row
 %! P = parts.dowel ('data', 6);
-%! assert_equal (P.l, [8:2:32, 36, 40:5:60, 70:10:100]);
+%! assert_equal (unique (P.c), 1.2);
 %!test  # the largest diameter
 %! P = parts.dowel ('data', 20);
-%! assert_equal (P.l, [40, 50, 60, 80, 100, 120]);
-%!test  # the smallest
-%! P = parts.dowel ('data', 1);
-%! assert_equal ([P.c, P.l], [0.2, 4, 5, 6, 8, 10, 12]);
+%! assert_equal (P.l', [40, 50, 60, 80, 100, 120]);
+%!test  # one pin
+%! P = parts.dowel ('data', 1, 12);
+%! assert_equal ([P.d, P.l, P.c], [1, 12, 0.2]);
 %!test  # its source
-%! P = parts.dowel ('data', 8);
-%! assert_equal ({P.maker, P.article, P.source}, ...
+%! P = parts.dowel ('data', 8, 20);
+%! assert_equal ([P.maker, P.article, P.source], ...
 %!               {'REYHER', '08734.001', ...
 %!                'REYHER, The Catalogue, 2020.04, pp. 374-375'});
+%!test  # each variable carries its unit and description
+%! P = parts.dowel ('data', 8, 20);
+%! assert_equal (P.Properties.VariableUnits(1:3), {'mm', 'mm', 'mm'});
+%! assert_equal (P.Properties.VariableDescriptions{3}, ...
+%!               'chamfer at each end, approximate');
 %!testif ; exist ('__occt__') == 3  # the shape stands L tall on the xy plane
 %! S = parts.dowel ('solid', 6, 30);
 %! assert_equal (bbox (S), [-3, -3, 0, 3, 3, 30], 1e-6);
@@ -216,8 +263,6 @@ endfunction
 
 %!error<parts.dowel: MODE must be 'data' or 'solid'.> parts.dowel ()
 %!error<parts.dowel: MODE must be 'data' or 'solid'.> parts.dowel (6)
-%!error<parts.dowel: 'data' takes a diameter D only.> ...
-%! parts.dowel ('data', 6, 30)
 %!error<parts.dowel: Name/Value arguments must come in pairs.> ...
 %! parts.dowel ('solid', 6, 30, 'Detailed')
 %!error<parts.dowel: option names must be character vectors.> ...
@@ -232,6 +277,9 @@ endfunction
 %! parts.dowel ('solid', 6)
 %!error<parts.dowel: D must be a real scalar.> parts.dowel ('data', [6, 8])
 %!error<parts.dowel: no 7 mm dowel in the catalogue.> parts.dowel ('data', 7)
+%!error<parts.dowel: no 6 x 31 mm dowel in the catalogue.> ...
+%! parts.dowel ('data', 6, 31)
+%!error<parts.dowel: L must be a real scalar.> parts.dowel ('data', 6, [30, 40])
 %!error<parts.dowel: no 14 mm dowel in the catalogue.> ...
 %! parts.dowel ('solid', 14, 50)
 %!error<parts.dowel: a 6 mm dowel must be longer than 2.4 mm.> ...

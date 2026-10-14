@@ -23,8 +23,8 @@
 ## Single row deep groove ball bearings from the catalogue.
 ##
 ## @code{@var{B} = parts.bearing.deepgroove (@qcode{'data'})} returns every
-## bearing in the catalogue as a struct array, sorted by bore, then outside
-## diameter, then width.
+## bearing in the catalogue as a table, one row per bearing, sorted by bore,
+## then outside diameter, then width.
 ## @code{@var{B} = parts.bearing.deepgroove (@qcode{'data'},
 ## @var{DESIGNATION})} returns the one bearing named, such as @qcode{'6205'}
 ## or @qcode{'61930 MA'}.  Nothing is built.
@@ -43,7 +43,8 @@
 ## rings are rounded to @var{r}.  It shows the bearing; it does not stand
 ## for the maker's internal design.
 ##
-## Each bearing is a struct with these fields, lengths in millimetres, loads
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{B})} lists; lengths are in millimetres, loads
 ## in newtons:
 ##
 ## @multitable @columnfractions 0.18 0.82
@@ -85,6 +86,61 @@ function OUT = deepgroove (MODE, DESIGNATION)
   endif
   if (strcmp (MODE, 'solid') && nargin < 2)
     error ("parts.bearing.deepgroove: a solid needs a DESIGNATION.");
+  endif
+
+  B = catalogue ();
+  if (nargin < 2)
+    OUT = B;
+    return;
+  endif
+  if (! ischar (DESIGNATION) || ! isrow (DESIGNATION))
+    error ("parts.bearing.deepgroove: DESIGNATION must be a character vector.");
+  endif
+  B = B(strcmp (B.designation, DESIGNATION), :);
+  if (height (B) == 0)
+    error ("parts.bearing.deepgroove: no bearing '%s' in the catalogue.", ...
+           DESIGNATION);
+  endif
+  if (strcmp (MODE, 'data'))
+    OUT = B;
+    return;
+  endif
+
+  ## The rings, grooved, and the balls, in the proportions of the type
+  dm = (B.d + B.D) / 2;
+  Dw = min (0.3 * (B.D - B.d), 0.8 * B.B);
+  ri = B.d / 2;
+  ro = B.D / 2;
+  a = dm / 2 - 0.3 * Dw;
+  b = dm / 2 + 0.3 * Dw;
+  f = min (B.r, (a - ri) / 3);
+  U = geom.UCS ([0, -1, 0], [0, 0, 0]);
+  inner = fillet (geom.Region ([ri, 0; a, 0; a, B.B; ri, B.B]), f);
+  outer = fillet (geom.Region ([b, 0; ro, 0; ro, B.B; b, B.B]), f);
+  inner.UCS = U;
+  outer.UCS = U;
+  mid = geom.UCS ([0, 0, 1], [0, 0, B.B / 2]);
+  S = subtract (union (solid.revolve (inner), solid.revolve (outer)), ...
+                solid.torus (dm / 2, 0.52 * Dw, mid));
+  n = floor (0.6 * pi * dm / Dw);
+  t = 2 * pi * (0:n-1) / n;
+  balls = arrayfun (@(k) solid.sphere (Dw / 2, ...
+                                       geom.UCS ([0, 0, 1], ...
+                                                 [dm / 2 * cos(t(k)), ...
+                                                  dm / 2 * sin(t(k)), ...
+                                                  B.B / 2])), ...
+                    1:n, 'UniformOutput', false);
+  OUT = union (S, balls{:});
+
+endfunction
+
+## The catalogue as a table, built on the first call and kept for the session
+function B = catalogue ()
+
+  persistent C;
+  if (! isempty (C))
+    B = C;
+    return;
   endif
 
   ## Designation, d, D, B, r, da, Da, ra, C, C0, nlim, mass, page
@@ -264,84 +320,69 @@ function OUT = deepgroove (MODE, DESIGNATION)
     '61976 MA', [380, 520, 65, 4, 395, 505, 3, 338000, 540000, 1900, 40, 302];
     '6076 M', [380, 560, 82, 5, 400, 542, 4, 436000, 695000, 1800, 70.5, 302];
   };
-  name = {'d', 'D', 'B', 'r', 'da', 'Da', 'ra', 'C', 'C0', 'nlim', 'mass'};
   V = cell2mat (T(:,2));
-  B = cell2struct ([T(:,1), num2cell(V(:,1:11)), ...
-                    cellfun(@(p) sprintf ("SKF 17000, p. %d", p), ...
-                            num2cell (V(:,12)), 'UniformOutput', false)], ...
-                   [{'designation'}, name, {'source'}], 2);
-
-  if (nargin < 2)
-    OUT = B;
-    return;
-  endif
-  if (! ischar (DESIGNATION) || ! isrow (DESIGNATION))
-    error ("parts.bearing.deepgroove: DESIGNATION must be a character vector.");
-  endif
-  k = find (strcmp (DESIGNATION, T(:,1)));
-  if (isempty (k))
-    error ("parts.bearing.deepgroove: no bearing '%s' in the catalogue.", ...
-           DESIGNATION);
-  endif
-  B = B(k);
-  if (strcmp (MODE, 'data'))
-    OUT = B;
-    return;
-  endif
-
-  ## The rings, grooved, and the balls, in the proportions of the type
-  dm = (B.d + B.D) / 2;
-  Dw = min (0.3 * (B.D - B.d), 0.8 * B.B);
-  ri = B.d / 2;
-  ro = B.D / 2;
-  a = dm / 2 - 0.3 * Dw;
-  b = dm / 2 + 0.3 * Dw;
-  f = min (B.r, (a - ri) / 3);
-  U = geom.UCS ([0, -1, 0], [0, 0, 0]);
-  inner = fillet (geom.Region ([ri, 0; a, 0; a, B.B; ri, B.B]), f);
-  outer = fillet (geom.Region ([b, 0; ro, 0; ro, B.B; b, B.B]), f);
-  inner.UCS = U;
-  outer.UCS = U;
-  mid = geom.UCS ([0, 0, 1], [0, 0, B.B / 2]);
-  S = subtract (union (solid.revolve (inner), solid.revolve (outer)), ...
-                solid.torus (dm / 2, 0.52 * Dw, mid));
-  n = floor (0.6 * pi * dm / Dw);
-  t = 2 * pi * (0:n-1) / n;
-  balls = arrayfun (@(k) solid.sphere (Dw / 2, ...
-                                       geom.UCS ([0, 0, 1], ...
-                                                 [dm / 2 * cos(t(k)), ...
-                                                  dm / 2 * sin(t(k)), ...
-                                                  B.B / 2])), ...
-                    1:n, 'UniformOutput', false);
-  OUT = union (S, balls{:});
+  page = arrayfun (@(p) sprintf ("SKF 17000, p. %d", p), V(:,12), ...
+                   'UniformOutput', false);
+  C = table (T(:,1), V(:,1), V(:,2), V(:,3), V(:,4), V(:,5), V(:,6), V(:,7), ...
+             V(:,8), V(:,9), V(:,10), V(:,11), page);
+  C.Properties.VariableNames = {'designation', 'd', 'D', 'B', 'r', 'da', ...
+                                'Da', 'ra', 'C', 'C0', 'nlim', 'mass', ...
+                                'source'};
+  C.Properties.VariableUnits = {'', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', 'N', 'N', 'r/min', 'kg', ''};
+  C.Properties.VariableDescriptions = {...
+    'designation, as SKF prints it', ...
+    'bore diameter', ...
+    'outside diameter', ...
+    'width', ...
+    'smallest chamfer of the rings, r1,2 min', ...
+    'smallest diameter of a shaft shoulder, da min', ...
+    'largest diameter of a housing shoulder, Da max', ...
+    'largest fillet radius at a shoulder, ra max', ...
+    'basic dynamic load rating', ...
+    'basic static load rating', ...
+    'limiting speed', ...
+    'mass', ...
+    'catalogue page the values were read from'};
+  C.Properties.Description = 'Single row deep groove ball bearings';
+  B = C;
 
 endfunction
 
 %!test  # the whole catalogue, sorted by bore
 %! B = parts.bearing.deepgroove ('data');
-%! assert_equal (numel (B), 174);
-%! assert_equal (issorted ([B.d]), true);
+%! assert_equal (height (B), 174);
+%! assert_equal (issorted (B.d), true);
 %!test  # one bearing, its values as the catalogue prints them
 %! B = parts.bearing.deepgroove ('data', '6205');
 %! assert_equal ([B.d, B.D, B.B, B.r], [25, 52, 15, 1]);
 %! assert_equal ([B.da, B.Da, B.ra], [30.6, 46.4, 1]);
 %! assert_equal ([B.C, B.C0, B.nlim, B.mass], [14800, 7800, 18000, 0.13]);
-%! assert_equal (B.source, 'SKF 17000, p. 272');
+%! assert_equal (B.source, {'SKF 17000, p. 272'});
+%!test  # each variable carries its unit and description
+%! B = parts.bearing.deepgroove ('data', '6205');
+%! assert_equal (B.Properties.VariableUnits([2, 9, 11, 12]), ...
+%!               {'mm', 'N', 'r/min', 'kg'});
+%! assert_equal (B.Properties.VariableDescriptions{10}, ...
+%!               'basic static load rating');
+%!test  # the table describes the family
+%! B = parts.bearing.deepgroove ('data', '6205');
+%! assert_equal (B.Properties.Description, ...
+%!               'Single row deep groove ball bearings');
 %!test  # a page continued from the one before keeps its bore
 %! B = parts.bearing.deepgroove ('data', '6006');
 %! assert_equal ([B.d, B.D, B.B, B.C, B.C0], [30, 55, 13, 13800, 8300]);
-%! assert_equal (B.source, 'SKF 17000, p. 274');
+%! assert_equal (B.source, {'SKF 17000, p. 274'});
 %!test  # a bearing SKF lists only with a brass cage
 %! B = parts.bearing.deepgroove ('data', '61930 MA');
 %! assert_equal ([B.d, B.D, B.B, B.C], [150, 210, 28, 88400]);
 %!test  # the four series are all there
 %! B = parts.bearing.deepgroove ('data');
-%! names = {B.designation};
-%! assert_equal (all (ismember ({'61805', '61905', '6005', '6205'}, names)), ...
-%!               true);
+%! names = {'61805', '61905', '6005', '6205'};
+%! assert_equal (all (ismember (names, B.designation)), true);
 %!test  # every shoulder lies between bore and outside diameter
 %! B = parts.bearing.deepgroove ('data');
-%! assert_equal (all ([B.d] < [B.da] & [B.da] < [B.Da] & [B.Da] < [B.D]), true);
+%! assert_equal (all (B.d < B.da & B.da < B.Da & B.Da < B.D), true);
 %!testif ; exist ('__occt__') == 3  # the shape is the two rings, B wide
 %! S = parts.bearing.deepgroove ('solid', '6205');
 %! assert_equal (bbox (S), [-26, -26, 0, 26, 26, 15], 1e-6);

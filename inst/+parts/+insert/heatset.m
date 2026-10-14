@@ -26,8 +26,8 @@
 ## pressed hot into a hole in a 3D-printed or other thermoplastic part.
 ##
 ## @code{@var{C} = parts.insert.heatset (@qcode{'data'})} returns every insert
-## in the catalogue as a struct array, one entry for each insert, sorted by
-## thread, length and outside diameter.
+## in the catalogue as a table, one row for each insert and maker that sells
+## it, sorted by thread, length and outside diameter.
 ## @code{@var{C} = parts.insert.heatset (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, as @qcode{'M4'}, and
 ## @code{@var{C} = parts.insert.heatset (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -41,19 +41,20 @@
 ## drilled along -@math{z}, it sits flush with the surface, as it is set.
 ## @code{@var{S}.Name} holds the designation, as
 ## @qcode{'Heat-set insert M4 x 8.1'}.  Only inserts in the catalogue are
-## built.
+## built, to ruthex's dimensions where ruthex sells the insert, else to CNC
+## Kitchen's.
 ##
 ## No function cuts or sizes the hole, here or in @code{drafting}: a printed
 ## hole comes out a different size with each printer, material and setting,
-## so the designer makes it.  The entry's @var{d3} is the makers'
-## recommendation to start from; its @var{t} and @var{w} are the depth and
-## wall the part must leave for the insert.
+## so the designer makes it.  A row's @var{d3} is its maker's recommendation
+## to start from; its @var{t} and @var{w} are the depth and wall the part
+## must leave for the insert.
 ##
 ## Name/Value pairs:
 ##
 ## @table @asis
 ## @item @qcode{'Maker'}
-## For @qcode{'data'}: only the inserts that maker sells, @qcode{'ruthex'} or
+## For @qcode{'data'}: only that maker's rows, @qcode{'ruthex'} or
 ## @qcode{'CNC Kitchen'}, in any case.
 ##
 ## @item @qcode{'Diameter'}
@@ -69,24 +70,26 @@
 ## nominal diameter.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
 ## @item @code{designation} @tab thread by length, as @qcode{'M4 x 8.1'},
 ## and by outside diameter between them where two inserts share both, as
 ## @qcode{'M3 x 5 x 4'}
-## @item @code{thread} @tab the thread, as @qcode{'M4'}
+## @item @code{thread} @tab thread, as @qcode{'M4'}
 ## @item @code{d} @tab nominal diameter of the thread
 ## @item @code{L} @tab length, nominal
 ## @item @code{d1} @tab outside diameter, over the knurl
-## @item @code{d2} @tab diameter of the pilot at the lower end; NaN where
-## no maker gives one
-## @item @code{d3} @tab diameter of the hole the makers recommend
+## @item @code{d2} @tab diameter of the pilot at the lower end; @code{NaN}
+## where the maker gives none
+## @item @code{d3} @tab diameter of the hole the maker recommends
 ## @item @code{t} @tab depth of a blind hole, smallest: @var{L} + 1
 ## @item @code{w} @tab wall round the hole, smallest
-## @item @code{makers} @tab the makers who sell the insert, as a cell array
-## @item @code{source} @tab the documents the insert was read from, one for
-## each maker, as a cell array
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number; empty where the maker's
+## document gives none
+## @item @code{source} @tab document the insert was read from
 ## @end multitable
 ##
 ## @subheading The form
@@ -119,20 +122,20 @@
 ##
 ## @subheading The catalogue
 ##
-## Every insert ruthex or CNC Kitchen sells with a metric thread.  The values
-## are ruthex's where it sells the insert, CNC Kitchen's otherwise, but for
-## the wall, which is the larger of the two.  Where both sell an insert they
-## agree, except that CNC Kitchen recommends holes 0.1 larger from M4 to M8,
-## gives M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3
-## x 5 x 4 a wall of 1.6 against 1.3.
+## Every insert ruthex or CNC Kitchen sells with a metric thread, a row for
+## each maker with its own values.  Where both sell an insert they agree,
+## except that CNC Kitchen recommends holes 0.1 larger from M4 to M8, gives
+## M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3 x 5
+## x 4 a wall of 1.6 against 1.3.
 ##
 ## ruthex: the @cite{RX series product data sheet}, metric ISO thread, status
-## 15.08.2022, page 1, for every insert but two sold since, read from the
-## drawings on their packets as ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8)
-## and M10 x 12.7 (RX-M10x12.7).
+## 15.08.2022, page 1, dimensions and order numbers, for every insert but two
+## sold since, read from the drawings and item numbers on their packets as
+## ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8) and M10 x 12.7
+## (RX-M10x12.7).
 ##
 ## CNC Kitchen: @cite{Dimensions & Design Guidelines}, metric inserts, June
-## 2025.  It gives no pilot diameter.
+## 2025.  It gives no pilot diameter and no article numbers.
 ##
 ## The depth of a blind hole, @var{L} + 1, is drawn by both.  The proportions
 ## of the form come from the makers' own published STEP models,
@@ -218,12 +221,17 @@ function OUT = heatset (MODE, varargin)
     OUT = C;
     return;
   endif
-  if (numel (C) > 1)
+  n = numel (unique (C.designation));
+  if (n > 1)
     error (strcat ("parts.insert.heatset: %d %s x %g inserts in the", ...
-                   " catalogue; choose one by 'Diameter'."), numel (C), ...
-           NAME, L);
+                   " catalogue; choose one by 'Diameter'."), n, NAME, L);
   endif
-  OUT = shape (C, detailed);
+  ## ruthex's dimensions where ruthex sells the insert
+  k = find (strcmp (C.maker, 'ruthex'), 1);
+  if (isempty (k))
+    k = 1;
+  endif
+  OUT = shape (C(k,:), detailed);
 
 endfunction
 
@@ -235,22 +243,22 @@ function C = catalogue (NAME, L, D1, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (NAME))
-    keep &= strcmp ({E.thread}, NAME);
+    keep &= strcmp (E.thread, NAME);
   endif
   if (! isempty (L))
-    keep &= abs ([E.L] - L) < 1e-9;
+    keep &= abs (E.L - L) < 1e-9;
   endif
   if (! isempty (D1))
-    keep &= abs ([E.d1] - D1) < 1e-9;
+    keep &= abs (E.d1 - D1) < 1e-9;
   endif
   if (! isempty (maker))
-    keep &= cellfun (@(m) any (strcmpi (m, maker)), {E.makers});
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -271,47 +279,73 @@ function C = catalogue (NAME, L, D1, maker)
 
 endfunction
 
-## Every insert of the catalogue, sorted by thread, length and diameter
+## Every insert of the catalogue, a row for each maker that sells it, sorted
+## by thread, length and diameter, ruthex's first
 function E = entries ()
 
-  ## Designation, thread, L, d1, d2, d3, w; then the documents of each maker
-  ## that sells it, ruthex's first, as R (data sheet), R6, R10 (packets) and
-  ## K (CNC Kitchen's guidelines)
-  A = {'M2 x 3', 'M2', 3, 3.6, NaN, 3.2, 1.3, {'K'};
-       'M2 x 4', 'M2', 4, 3.6, 3.1, 3.2, 1.3, {'R'};
-       'M2.5 x 4', 'M2.5', 4, 4.6, NaN, 4, 1.6, {'K'};
-       'M2.5 x 5.7', 'M2.5', 5.7, 4.6, 3.9, 4, 1.6, {'R'};
-       'M3 x 3', 'M3', 3, 4.6, NaN, 4, 1.6, {'K'};
-       'M3 x 4', 'M3', 4, 4.6, 3.9, 4, 1.6, {'R'};
-       'M3 x 5 x 4', 'M3', 4, 5, 4.25, 4.4, 1.6, {'R', 'K'};
-       'M3 x 5.7', 'M3', 5.7, 4.6, 3.9, 4, 1.6, {'R', 'K'};
-       'M4 x 4', 'M4', 4, 6.3, 5.5, 5.6, 2.1, {'R', 'K'};
-       'M4 x 8.1', 'M4', 8.1, 6.3, 5.5, 5.6, 2.1, {'R', 'K'};
-       'M5 x 5.8', 'M5', 5.8, 7.1, 6.3, 6.4, 2.6, {'R', 'K'};
-       'M5 x 9.5', 'M5', 9.5, 7.1, 6.3, 6.4, 2.6, {'R', 'K'};
-       'M6 x 6.8', 'M6', 6.8, 8.7, 7.9, 8, 3.3, {'R6'};
-       'M6 x 12.7', 'M6', 12.7, 8.7, 7.9, 8, 3.3, {'R', 'K'};
-       'M8 x 12.7', 'M8', 12.7, 10.1, 9.5, 9.6, 4.5, {'R', 'K'};
-       'M10 x 12.7', 'M10', 12.7, 12.6, 11.8, 12, 6, {'R10', 'K'}};
+  ## Designation, thread, L, d1, d2, d3, w, maker, article, document: R
+  ## ruthex's data sheet, R6 and R10 its packets, K CNC Kitchen's guidelines
+  A = {'M2 x 3', 'M2', 3, 3.6, NaN, 3.2, 1.3, 'K', '', 'K';
+       'M2 x 4', 'M2', 4, 3.6, 3.1, 3.2, 1.3, 'R', 'GE-M2x04-001', 'R';
+       'M2.5 x 4', 'M2.5', 4, 4.6, NaN, 4, 1.6, 'K', '', 'K';
+       'M2.5 x 5.7', 'M2.5', 5.7, 4.6, 3.9, 4, 1.6, 'R', 'GE-M25x57-001', 'R';
+       'M3 x 3', 'M3', 3, 4.6, NaN, 4, 1.6, 'K', '', 'K';
+       'M3 x 4', 'M3', 4, 4.6, 3.9, 4, 1.6, 'R', 'GE-M3Sx40-002', 'R';
+       'M3 x 5 x 4', 'M3', 4, 5, 4.25, 4.4, 1.3, 'R', 'GE-M3x5x4-001', 'R';
+       'M3 x 5 x 4', 'M3', 4, 5, NaN, 4.4, 1.6, 'K', '', 'K';
+       'M3 x 5.7', 'M3', 5.7, 4.6, 3.9, 4, 1.6, 'R', 'GE-M3x57-001', 'R';
+       'M3 x 5.7', 'M3', 5.7, 4.6, NaN, 4, 1.6, 'K', '', 'K';
+       'M4 x 4', 'M4', 4, 6.3, 5.5, 5.6, 2.1, 'R', 'GE-M4Sx04-1', 'R';
+       'M4 x 4', 'M4', 4, 6.3, NaN, 5.7, 2.1, 'K', '', 'K';
+       'M4 x 8.1', 'M4', 8.1, 6.3, 5.5, 5.6, 2.1, 'R', 'GE-M4x81-001', 'R';
+       'M4 x 8.1', 'M4', 8.1, 6.3, NaN, 5.7, 2.1, 'K', '', 'K';
+       'M5 x 5.8', 'M5', 5.8, 7.1, 6.3, 6.4, 2.6, 'R', 'GE-M5Sx58-001', 'R';
+       'M5 x 5.8', 'M5', 5.8, 7.1, NaN, 6.5, 2.6, 'K', '', 'K';
+       'M5 x 9.5', 'M5', 9.5, 7.1, 6.3, 6.4, 2.6, 'R', 'GE-M5x95-001', 'R';
+       'M5 x 9.5', 'M5', 9.5, 7.1, NaN, 6.5, 2.6, 'K', '', 'K';
+       'M6 x 6.8', 'M6', 6.8, 8.7, 7.9, 8, 3.3, 'R', 'GE-M6X68-001', 'R6';
+       'M6 x 12.7', 'M6', 12.7, 8.7, 7.9, 8, 3.3, 'R', 'GE-M6x127-002', 'R';
+       'M6 x 12.7', 'M6', 12.7, 8.7, NaN, 8.1, 3.3, 'K', '', 'K';
+       'M8 x 12.7', 'M8', 12.7, 10.1, 9.5, 9.6, 4.5, 'R', 'GE-M8x127-001', 'R';
+       'M8 x 12.7', 'M8', 12.7, 10.2, NaN, 9.7, 4.5, 'K', '', 'K';
+       'M10 x 12.7', 'M10', 12.7, 12.6, 11.8, 12, 6, 'R', 'GE-M10X127-001', ...
+       'R10';
+       'M10 x 12.7', 'M10', 12.7, 12.6, NaN, 12, 6, 'K', '', 'K'};
 
   sheet = "ruthex, RX series product data sheet, 15.08.2022, p. 1";
   docs = struct ('R', sheet, ...
                  'R6', "ruthex, RX-M6Sx6.8 packet, ruthex.de", ...
                  'R10', "ruthex, RX-M10x12.7 packet, ruthex.de", ...
                  'K', "CNC Kitchen, Dimensions & Design Guidelines, 2025-06");
-  source = cellfun (@(k) cellfun (@(x) docs.(x), k, 'UniformOutput', false), ...
-                    A(:,8), 'UniformOutput', false);
-  who = {'R', 'ruthex'; 'K', 'CNC Kitchen'};
-  makers = cellfun (@(k) who(cellfun (@(w) any (strncmp (k, w, 1)), ...
-                                      who(:,1)), 2)', ...
-                    A(:,8), 'UniformOutput', false);
+  source = cellfun (@(k) docs.(k), A(:,10), 'UniformOutput', false);
+  maker = repmat ({'ruthex'}, rows (A), 1);
+  maker(strcmp (A(:,8), 'K')) = {'CNC Kitchen'};
   d = cellfun (@(s) str2double (s(2:end)), A(:,2));
-  F = [A(:,1:2), num2cell(d), A(:,3:6), num2cell([A{:,3}]' + 1), A(:,7), ...
-       makers, source]';
-  E = cell2struct (F, {'designation', 'thread', 'd', 'L', 'd1', 'd2', ...
-                       'd3', 't', 'w', 'makers', 'source'}, 1)';
-  [~, k] = sortrows ([d, [A{:,3}]', [A{:,4}]']);
-  E = E(k);
+  V = cell2mat (A(:,3:7));
+  E = table (A(:,1), A(:,2), d, V(:,1), V(:,2), V(:,3), V(:,4), V(:,1) + 1, ...
+             V(:,5), maker, A(:,9), source);
+  E.Properties.VariableNames = {'designation', 'thread', 'd', 'L', 'd1', ...
+                                'd2', 'd3', 't', 'w', 'maker', 'article', ...
+                                'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    ['thread by length, and by outside diameter', ...
+     ' where two inserts share both'], ...
+    'thread', ...
+    'nominal diameter of the thread', ...
+    'length, nominal', ...
+    'outside diameter, over the knurl', ...
+    'diameter of the pilot at the lower end', ...
+    'diameter of the hole the maker recommends', ...
+    'depth of a blind hole, smallest', ...
+    'wall round the hole, smallest', ...
+    'maker', ...
+    "maker's article number", ...
+    'document the insert was read from'};
+  E.Properties.Description = 'Heat-set threaded inserts';
+  E = sortrows (E, {'d', 'L', 'd1', 'maker'}, ...
+                {'ascend', 'ascend', 'ascend', 'descend'});
 
 endfunction
 
@@ -334,7 +368,7 @@ function S = shape (C, detailed)
   P = [r1, 0; r1, z(1); g1, z(1); g1, z(2); r1, z(2); r1, z(3); g2, z(3);
        g2, z(4); r2, z(4)];
   if (detailed)
-    T = solid.threadspec (C.thread);
+    T = solid.threadspec (C.thread{1});
     rb = T.drill / 2;
     c = L / 50;
     P = [P; r2, c - L; r2 - c, -L];
@@ -346,7 +380,7 @@ function S = shape (C, detailed)
   R.UCS = geom.UCS ([0, -1, 0], [0, 0, 0]);
   S = solid.revolve (R);
   if (detailed)
-    S = thread (S, [0, 0, 0], C.thread, L);
+    S = thread (S, [0, 0, 0], C.thread{1}, L);
     ## The bands, every face inside them left out, knurled after the thread
     q = 0.999 * r1;
     e = 1e-3;
@@ -359,43 +393,66 @@ function S = shape (C, detailed)
     S = knurl (S, band (S, z(3), z(2)), 2 * h, 'Pattern', 'single', ...
                'Angle', 45);
   endif
-  S.Name = sprintf ("Heat-set insert %s", C.designation);
+  S.Name = ["Heat-set insert ", C.designation{1}];
 
 endfunction
 
-%!test  # the M4 x 8.1
+%!test  # the M4 x 8.1, a row for each maker
 %! C = parts.insert.heatset ('data', 'M4', 8.1);
+%! assert_equal (C.maker', {'ruthex', 'CNC Kitchen'});
+%!test  # ruthex's values
+%! C = parts.insert.heatset ('data', 'M4', 8.1, 'Maker', 'ruthex');
 %! assert_equal ([C.d, C.L, C.d1, C.d2, C.d3, C.t, C.w], ...
 %!               [4, 8.1, 6.3, 5.5, 5.6, 9.1, 2.1]);
-%!test  # its makers and sources
-%! C = parts.insert.heatset ('data', 'M4', 8.1);
-%! assert_equal ({C.makers, C.source}, ...
-%!               {{'ruthex', 'CNC Kitchen'}, ...
-%!                {'ruthex, RX series product data sheet, 15.08.2022, p. 1', ...
-%!                 'CNC Kitchen, Dimensions & Design Guidelines, 2025-06'}});
-%!test  # ruthex's outside diameter and hole where the makers differ
+%!test  # its article and source
+%! C = parts.insert.heatset ('data', 'M4', 8.1, 'Maker', 'ruthex');
+%! assert_equal ([C.article, C.source], ...
+%!               {'GE-M4x81-001', ...
+%!                ['ruthex, RX series product data sheet,', ...
+%!                 ' 15.08.2022, p. 1']});
+%!test  # CNC Kitchen's values: a larger hole, no pilot
+%! C = parts.insert.heatset ('data', 'M4', 8.1, 'Maker', 'CNC Kitchen');
+%! assert_equal ([C.d1, C.d2, C.d3, C.w], [6.3, NaN, 5.7, 2.1]);
+%!test  # its source, without an article number
+%! C = parts.insert.heatset ('data', 'M4', 8.1, 'Maker', 'CNC Kitchen');
+%! assert_equal ([C.article, C.source], ...
+%!               {'', ['CNC Kitchen, Dimensions & Design', ...
+%!                     ' Guidelines, 2025-06']});
+%!test  # where the makers' outside diameters differ
 %! C = parts.insert.heatset ('data', 'M8', 12.7);
-%! assert_equal ([C.d1, C.d3], [10.1, 9.6]);
-%!test  # the larger wall where the makers differ
+%! assert_equal (C.d1', [10.1, 10.2]);
+%!test  # where their walls differ
 %! C = parts.insert.heatset ('data', 'M3', 4, 'Diameter', 5);
-%! assert_equal ({C.designation, C.w}, {'M3 x 5 x 4', 1.6});
-%!test  # no pilot where only CNC Kitchen sells the insert
+%! assert_equal (C.w', [1.3, 1.6]);
+%!test  # only CNC Kitchen sells the M2 x 3
 %! C = parts.insert.heatset ('data', 'M2', 3);
-%! assert_equal ({isnan(C.d2), C.makers}, {true, {'CNC Kitchen'}});
+%! assert_equal (C.maker, {'CNC Kitchen'});
 %!test  # an insert read from its packet
-%! C = parts.insert.heatset ('data', 'M10', 12.7);
-%! assert_equal ({C.source{1}, C.d2, C.t}, ...
-%!               {'ruthex, RX-M10x12.7 packet, ruthex.de', 11.8, 13.7});
+%! C = parts.insert.heatset ('data', 'M10', 12.7, 'Maker', 'ruthex');
+%! assert_equal ([C.article, C.source], ...
+%!               {'GE-M10X127-001', ...
+%!                'ruthex, RX-M10x12.7 packet, ruthex.de'});
+%!test  # its pilot and hole depth
+%! C = parts.insert.heatset ('data', 'M10', 12.7, 'Maker', 'ruthex');
+%! assert_equal ([C.d2, C.t], [11.8, 13.7]);
 %!test  # a thread alone gives every length
 %! C = parts.insert.heatset ('data', 'M3');
-%! assert_equal ({C.designation}, ...
+%! assert_equal (unique (C.designation, 'stable')', ...
 %!               {'M3 x 3', 'M3 x 4', 'M3 x 5 x 4', 'M3 x 5.7'});
-%!test  # 'Maker' keeps the inserts it sells, in any case
+%!test  # 'Maker' keeps its rows, in any case
 %! C = parts.insert.heatset ('data', 'M6', 'Maker', 'cnc kitchen');
-%! assert_equal ({C.designation}, {'M6 x 12.7'});
-%!test  # the whole catalogue, sorted by thread
+%! assert_equal (C.designation, {'M6 x 12.7'});
+%!test  # the whole catalogue, a row for each insert and maker
 %! C = parts.insert.heatset ('data');
-%! assert_equal ([numel(C), issorted([C.d])], [16, 1]);
+%! assert_equal (height (C), 25);
+%!test  # sorted by thread, then length
+%! C = parts.insert.heatset ('data');
+%! assert_equal (issorted ([C.d, C.L], 'rows'), true);
+%!test  # each variable carries its unit and description
+%! C = parts.insert.heatset ('data', 'M2', 3);
+%! assert_equal (C.Properties.VariableUnits{7}, 'mm');
+%! assert_equal (C.Properties.VariableDescriptions{7}, ...
+%!               'diameter of the hole the maker recommends');
 %!testif ; exist ('__occt__') == 3  # a plain insert: bands, grooves, pilot
 %! S = parts.insert.heatset ('solid', 'M4', 8.1);
 %! V = pi * 8.1 * ((3.15 ^ 2 - 4) * 0.64 + (2.6 ^ 2 - 4) * 0.11 ...

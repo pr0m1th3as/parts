@@ -25,8 +25,8 @@
 ## Hexagon socket set screws, ISO 4026, 4027, 4028 and 4029.
 ##
 ## @code{@var{C} = parts.screw.set (@qcode{'data'})} returns every set screw
-## in the catalogue as a struct array, one entry for each maker's article in
-## each size and length, sorted by size, pitch and length.
+## in the catalogue as a table, one row for each maker's article in each
+## size and length, sorted by size, pitch and length.
 ## @code{@var{C} = parts.screw.set (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, such as @qcode{'M6'} or @qcode{'M8x1'},
 ## and @code{@var{C} = parts.screw.set (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -83,13 +83,14 @@
 ## 120 degrees.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Hexagon socket set screw ISO 4029 - M6 x 12'}, without the
 ## property class
-## @item @code{standard} @tab the standard, as @qcode{'ISO 4029'}, when its
+## @item @code{standard} @tab standard, as @qcode{'ISO 4029'}, when its
 ## table defines the screw, else empty: such a screw is custom
 ## @item @code{d} @tab nominal diameter
 ## @item @code{P} @tab pitch
@@ -97,15 +98,15 @@
 ## @item @code{point} @tab @qcode{'flat'}, @qcode{'cone'}, @qcode{'dog'} or
 ## @qcode{'cup'}
 ## @item @code{drive} @tab @qcode{'hexsocket'}
-## @item @code{tool} @tab the hexagon key, as @qcode{'3'}
+## @item @code{tool} @tab hexagon key, as @qcode{'3'}
 ## @item @code{class} @tab property class or stainless steel grade, as
 ## @qcode{'45H'} or @qcode{'A4'}; @qcode{'A1/A2'} where the maker sells
 ## either
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'zinc plated'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by its standard's number when the standard's table
@@ -317,26 +318,26 @@ function C = catalogue (NAME, d, P, L, point, bypoint, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     T = sizes ();
     if (isnan (P) && any (T(:,1) == d))
       P = T(T(:,1) == d,2);
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (bypoint)
-    keep &= strcmp ({E.point}, point);
+    keep &= strcmp (E.point, point);
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -535,14 +536,32 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, P, l]), point, ...
-       repmat({'hexsocket'}, n, 1), tool, A(a,4:5), ...
-       repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'point', ...
-                       'drive', 'tool', 'class', 'finish', 'maker', ...
-                       'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, P, l], [1, 2, 3]);
-  E = E(k);
+  drive = repmat ({'hexsocket'}, n, 1);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, P, l, point, drive, tool, A(a,4), A(a,5), ...
+             maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'point', 'drive', 'tool', 'class', 'finish', ...
+                                'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', '', '', '', '', ...
+                                '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'standard when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch', ...
+    'nominal length', ...
+    'flat, cone, dog or cup', ...
+    'hexsocket', ...
+    'hexagon key', ...
+    'property class or stainless steel grade', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = ['Hexagon socket set screws, ISO 4026, 4027,', ...
+                              ' 4028 and 4029'];
+  E = sortrows (E, {'d', 'P', 'l'});
 
 endfunction
 
@@ -605,39 +624,51 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.set ('data');
-%! assert_equal (numel (C), 1240);
+%! assert_equal (height (C), 1240);
+%!test  # sorted by size, pitch, then length
+%! C = parts.screw.set ('data');
+%! assert_equal (issorted ([C.d, C.P, C.l], 'rows'), true);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cup');
-%! E = C(strcmp ({C.article}, '04029.200'));
-%! assert_equal ({E.designation, E.class, E.finish, E.tool}, ...
-%!               {'Hexagon socket set screw ISO 4029 - M6 x 12', '45H', ...
-%!                'plain', '3'});
-%!test  # its size and source
+%! E = C(strcmp (C.article, '04029.200'),:);
+%! assert_equal ([E.designation, E.class, E.finish, E.tool], ...
+%!               {'Hexagon socket set screw ISO 4029 - M6 x 12', ...
+%!                '45H', 'plain', '3'});
+%!test  # its size
 %! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cup');
-%! E = C(strcmp ({C.article}, '04029.200'));
-%! assert_equal ({E.d, E.P, E.l, E.source}, ...
-%!               {6, 1, 12, 'REYHER, The Catalogue, 2020.04, p. 277'});
+%! E = C(strcmp (C.article, '04029.200'),:);
+%! assert_equal ([E.d, E.P, E.l], [6, 1, 12]);
+%!test  # its source
+%! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cup');
+%! E = C(strcmp (C.article, '04029.200'),:);
+%! assert_equal (E.source, {'REYHER, The Catalogue, 2020.04, p. 277'});
+%!test  # each variable carries its unit and description
+%! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cup');
+%! assert_equal (C.Properties.VariableUnits([3, 5]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{6}, ...
+%!               'flat, cone, dog or cup');
 %!test  # every cup point article sold as M6 x 12
 %! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cup');
-%! assert_equal ({C.article}, {'04029.200', '04029.210', '04029.910', ...
-%!                             '04029.940'});
+%! assert_equal (C.article', {'04029.200', '04029.210', ...
+%!                            '04029.910', '04029.940'});
 %!test  # without 'Point' every point comes
 %! C = parts.screw.set ('data', 'M6', 12);
-%! assert_equal (unique ({C.point}), {'cone', 'cup', 'dog', 'flat'});
+%! assert_equal (unique (C.point)', {'cone', 'cup', 'dog', 'flat'});
 %!test  # a fine pitch is custom and names its point
 %! C = parts.screw.set ('data', 'M8x1', 20, 'Point', 'cup');
-%! assert_equal ({C.designation, C.standard}, ...
-%!               {'Hexagon socket set screw with cup point M8x1 x 20', ''});
+%! assert_equal (C.designation, ...
+%!               {'Hexagon socket set screw with cup point M8x1 x 20'});
+%! assert_equal (C.standard, {''});
 %!test  # a length shorter than the standard's is custom
 %! C = parts.screw.set ('data', 'M4', 3, 'Point', 'flat');
 %! assert_equal (C.designation, ...
-%!               'Hexagon socket set screw with flat point M4 x 3');
+%!               {'Hexagon socket set screw with flat point M4 x 3'});
 %!test  # stainless sold as either grade
 %! C = parts.screw.set ('data', 'M6', 12, 'Point', 'cone');
-%! assert_equal ({C.class}, {'A1/A2', 'A4'});
+%! assert_equal (C.class', {'A1/A2', 'A4'});
 %!test  # 'Maker' in any case
 %! C = parts.screw.set ('data', 'M6', 12, 'Maker', 'reyher');
-%! assert_equal (numel (C), 10);
+%! assert_equal (height (C), 10);
 %!testif ; exist ('__occt__') == 3  # flat point, long: chamfers and socket
 %! S = parts.screw.set ('solid', 'M6', 12);
 %! fr = @(a, b, h) pi * h / 3 * (a ^ 2 + a * b + b ^ 2);

@@ -23,29 +23,32 @@
 ## Properties of the materials parts are made of.
 ##
 ## @code{@var{M} = parts.material ()} returns every material in the catalogue
-## as a struct array.  @code{@var{M} = parts.material (@var{NAME})} returns the
-## one named, such as @qcode{'C45'}.  For a metal, whose strength depends on
-## the size of the section, @code{@var{M} = parts.material (@var{NAME},
-## @var{SIZE})} returns the strength for a section @var{SIZE} millimetres
-## across, the diameter of a bar or the thickness of a plate; without
-## @var{SIZE} it returns the smallest section's.
+## as a table, one row for each material and range of section sizes.  A
+## metal's strength depends on the size of the section, the diameter of a bar
+## or the thickness of a plate, so its source tabulates it by ranges, a row
+## each; a polymer's does not, and it has one row.  @code{@var{M} =
+## parts.material (@var{NAME})} returns the rows of the one named, such as
+## @qcode{'C45'}, and @code{@var{M} = parts.material (@var{NAME},
+## @var{SIZE})} the one row for a section @var{SIZE} millimetres across.
 ##
-## Each material is a struct with these fields, stresses in megapascals:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{M})} lists; stresses are in megapascals:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{name} @tab the name it is asked for by
+## @item @code{name} @tab name it is asked for by
 ## @item @code{class} @tab @qcode{'metal'}, @qcode{'machined polymer'} or
 ## @qcode{'printed polymer'}
+## @item @code{section} @tab sizes of section the row holds for, over the
+## first up to the second, two columns; 0 to @code{Inf} for a polymer
 ## @item @code{E} @tab Young's modulus
 ## @item @code{nu} @tab Poisson's ratio
 ## @item @code{Rp} @tab yield strength, 0.2 per cent proof stress or tensile
-## stress at yield; empty where the source gives none
-## @item @code{Rm} @tab tensile strength; empty where the source gives none
-## @item @code{A} @tab elongation at break, per cent; empty where the source
-## gives none
+## stress at yield; @code{NaN} where the source gives none
+## @item @code{Rm} @tab tensile strength; @code{NaN} where the source gives
+## none
+## @item @code{A} @tab elongation at break, per cent; @code{NaN} where the
+## source gives none
 ## @item @code{rho} @tab density, kilograms per cubic metre
-## @item @code{sizes} @tab for a metal, the rows @code{[@var{up to}, Rp, Rm,
-## A]} the strength is tabulated in; empty for a polymer
 ## @item @code{source} @tab where the values come from
 ## @end multitable
 ##
@@ -92,6 +95,43 @@
 
 function M = material (NAME, SIZE)
 
+  M = catalogue ();
+  if (nargin == 0)
+    return;
+  endif
+
+  if (! ischar (NAME) || ! isrow (NAME))
+    error ("parts.material: NAME must be a character vector.");
+  endif
+  M = M(strcmp (M.name, NAME), :);
+  if (height (M) == 0)
+    error ("parts.material: no material '%s' in the catalogue.", NAME);
+  endif
+
+  if (nargin > 1)
+    if (! isnumeric (SIZE) || ! isreal (SIZE) || ! isscalar (SIZE)
+        || ! (SIZE > 0))
+      error ("parts.material: SIZE must be a positive real scalar.");
+    endif
+    r = find (SIZE <= M.section(:,2), 1);
+    if (isempty (r))
+      error ("parts.material: %s is tabulated only up to %g mm.", NAME, ...
+             M.section(end,2));
+    endif
+    M = M(r,:);
+  endif
+
+endfunction
+
+## The catalogue as a table, built on the first call and kept for the session
+function M = catalogue ()
+
+  persistent C;
+  if (! isempty (C))
+    M = C;
+    return;
+  endif
+
   ## Name, class, E, nu, Rp, Rm, A, rho; sizes as [up to, Rp, Rm, A]
   T = {
     'C45', 'metal', 210000, 0.3, 340, 620, 14, 7800, ...
@@ -115,68 +155,81 @@ function M = material (NAME, SIZE)
     'Ertalon 6 SA', 'machined polymer', 1425, 0.40, 45, [], 100, 1140, [], ...
       "Ertalon 6 SA, conditioned, older product sheet; rho: MCAM (2024)"
   };
-  M = cell2struct (T, {'name', 'class', 'E', 'nu', 'Rp', 'Rm', 'A', 'rho', ...
-                       'sizes', 'source'}, 2);
-  if (nargin == 0)
-    return;
-  endif
-
-  if (! ischar (NAME) || ! isrow (NAME))
-    error ("parts.material: NAME must be a character vector.");
-  endif
-  k = find (strcmp (NAME, {M.name}));
-  if (isempty (k))
-    error ("parts.material: no material '%s' in the catalogue.", NAME);
-  endif
-  M = M(k);
-
-  if (nargin > 1)
-    if (! isnumeric (SIZE) || ! isreal (SIZE) || ! isscalar (SIZE)
-        || ! (SIZE > 0))
-      error ("parts.material: SIZE must be a positive real scalar.");
-    endif
-    if (! isempty (M.sizes))
-      r = find (SIZE <= M.sizes(:,1), 1);
-      if (isempty (r))
-        error ("parts.material: %s is tabulated only up to %g mm.", ...
-               M.name, M.sizes(end,1));
-      endif
-      M.Rp = M.sizes(r,2);
-      M.Rm = M.sizes(r,3);
-      M.A = M.sizes(r,4);
-    endif
-  endif
+  ## One row for each range of sections, a polymer's from 0 to Inf
+  P = T(:,3:8);
+  P(cellfun (@isempty, P)) = {NaN};
+  P = cell2mat (P);
+  S = T(:,9);
+  none = cellfun (@isempty, S);
+  S(none) = num2cell ([Inf(sum (none), 1), P(none,3:5)], 2);
+  n = cellfun (@rows, S);
+  k = repelem ((1:rows (T))', n);
+  S = cell2mat (S);
+  lo = [0; S(1:end-1,1)];
+  lo(cumsum (n) - n + 1) = 0;
+  C = table (T(k,1), T(k,2), [lo, S(:,1)], P(k,1), P(k,2), S(:,2), S(:,3), ...
+             S(:,4), P(k,6), T(k,10));
+  C.Properties.VariableNames = {'name', 'class', 'section', 'E', 'nu', 'Rp', ...
+                                'Rm', 'A', 'rho', 'source'};
+  C.Properties.VariableUnits = {'', '', 'mm', 'MPa', '', 'MPa', 'MPa', '%', ...
+                                'kg/m^3', ''};
+  C.Properties.VariableDescriptions = {...
+    'name it is asked for by', ...
+    'metal, machined polymer or printed polymer', ...
+    ['sizes of section the row holds for,', ...
+     ' over the first up to the second'], ...
+    "Young's modulus", ...
+    "Poisson's ratio", ...
+    ['yield strength, 0.2 per cent proof stress or', ...
+     ' tensile stress at yield'], ...
+    'tensile strength', ...
+    'elongation at break', ...
+    'density', ...
+    'where the values come from'};
+  C.Properties.Description = 'Properties of the materials parts are made of';
+  M = C;
 
 endfunction
 
 %!test  # the whole catalogue
 %! M = parts.material ();
-%! assert_equal ({M.name}, {'C45', 'EN AW-6082-T6', 'CuSn12', 'PETG', ...
-%!                          'PETG-CF', 'PA6-CF', 'Ertalon 6 SA'});
+%! assert_equal (unique (M.name, 'stable')', ...
+%!               {'C45', 'EN AW-6082-T6', 'CuSn12', 'PETG', ...
+%!                'PETG-CF', 'PA6-CF', 'Ertalon 6 SA'});
+%!test  # one row for each range of sections
+%! M = parts.material ();
+%! assert_equal (height (M), 12);
 %!test  # every material has a modulus, a Poisson's ratio and a density
 %! M = parts.material ();
-%! assert_equal (all ([M.E] > 0 & [M.nu] > 0 & [M.rho] > 0), true);
+%! assert_equal (all (M.E > 0 & M.nu > 0 & M.rho > 0), true);
 %!test  # and a strength, yield or tensile
 %! M = parts.material ();
-%! ok = arrayfun (@(m) ! isempty (m.Rp) || ! isempty (m.Rm), M);
-%! assert_equal (all (ok), true);
+%! assert_equal (all (! isnan (M.Rp) | ! isnan (M.Rm)), true);
+%!test  # a metal's ranges, over one size up to the next
+%! M = parts.material ('C45');
+%! assert_equal (M.section, [0, 16; 16, 100; 100, 250]);
 %!test  # C45 normalised, as EN 10083-2 Table 10 gives it by diameter
 %! M = parts.material ('C45', 17);
 %! assert_equal ([M.Rp, M.Rm, M.A], [305, 580, 16]);
-%!test  # the smallest section without a size
-%! M = parts.material ('C45');
+%!test  # a size on a boundary takes the smaller range
+%! M = parts.material ('C45', 16);
 %! assert_equal ([M.Rp, M.Rm], [340, 620]);
 %!test  # 6082-T6 round bar by diameter
 %! M = parts.material ('EN AW-6082-T6', 160);
 %! assert_equal ([M.Rp, M.Rm], [240, 280]);
-%!test  # a polymer's strength does not depend on size
-%! M1 = parts.material ('PETG', 5);
-%! M2 = parts.material ('PETG', 50);
-%! assert_equal (M1.Rp, M2.Rp);
+%!test  # a polymer has one row, whatever the size
+%! M = parts.material ('PETG');
+%! assert_equal ([height(M), M.section], [1, 0, Inf]);
+%!test  # the same row at any size
+%! assert_equal (isequaln (parts.material ('PETG', 50), ...
+%!                        parts.material ('PETG', 5)), true);
 %!test  # the printed nylon is wet and loaded across its layers
 %! M = parts.material ('PA6-CF');
-%! assert_equal ([M.E, M.Rm, M.A], [1056.1, 25.5, 6.7]);
-%! assert_equal (M.Rp, []);
+%! assert_equal ([M.E, M.Rp, M.Rm, M.A], [1056.1, NaN, 25.5, 6.7]);
+%!test  # each variable carries its unit and description
+%! M = parts.material ('C45', 17);
+%! assert_equal (M.Properties.VariableUnits([4, 9]), {'MPa', 'kg/m^3'});
+%! assert_equal (M.Properties.VariableDescriptions{5}, "Poisson's ratio");
 
 %!error<parts.material: NAME must be a character vector.> parts.material (1)
 %!error<parts.material: no material 'steel' in the catalogue.> ...

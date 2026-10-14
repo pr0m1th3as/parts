@@ -25,8 +25,8 @@
 ## Cheese head screws: slotted, ISO 1207, and hexalobular socket, ISO 14580.
 ##
 ## @code{@var{C} = parts.screw.cheese (@qcode{'data'})} returns every cheese
-## head screw in the catalogue as a struct array, one entry for each maker's
-## article in each size and length, sorted by size and length.
+## head screw in the catalogue as a table, one row for each maker's article
+## in each size and length, sorted by size and length.
 ## @code{@var{C} = parts.screw.cheese (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, such as @qcode{'M5'}, and
 ## @code{@var{C} = parts.screw.cheese (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -74,10 +74,11 @@
 ## slot is cut @var{t} min deep, and the end is left flat, as rolled.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Cheese head screw ISO 1207 - M5 x 20'}, without the property
 ## class
 ## @item @code{standard} @tab @qcode{'ISO 1207'} or @qcode{'ISO 14580'}
@@ -91,15 +92,15 @@
 ## @item @code{dk} @tab head diameter at the bearing face, largest
 ## @item @code{k} @tab head height, largest
 ## @item @code{drive} @tab @qcode{'slot'} or @qcode{'hexalobular'}
-## @item @code{tool} @tab the screwdriver tip of ISO 2380-1, thickness by
+## @item @code{tool} @tab screwdriver tip of ISO 2380-1, thickness by
 ## width, as @qcode{'1.2 x 8'}; empty for M1.6 to M3, which the source does
 ## not assign
 ## @item @code{class} @tab property class or material, as @qcode{'4.8'},
 ## @qcode{'A2'}, @qcode{'brass'} or @qcode{'PA'}
-## @item @code{finish} @tab the finish as the maker names it
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{finish} @tab finish as the maker names it
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by the standard's number when its table defines it:
@@ -306,26 +307,26 @@ function C = catalogue (NAME, d, P, L, drive, bydrive, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     T = sizes ('slot');
     if (isnan (P) && any (T(:,1) == d))
       P = T(T(:,1) == d,2);
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (bydrive)
-    keep &= strcmp ({E.drive}, drive);
+    keep &= strcmp (E.drive, drive);
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -464,13 +465,33 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, h(:,2), l, b, h(:,3:4)]), A(a,3), ...
-       tool, A(a,4:5), repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       'dk', 'k', 'drive', 'tool', 'class', 'finish', ...
-                       'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, l], [1, 2]);
-  E = E(k);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, h(:,2), l, b, h(:,3), h(:,4), A(a,3), tool, ...
+             A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 'dk', 'k', 'drive', 'tool', 'class', ...
+                                'finish', 'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'ISO 1207 or ISO 14580 when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch, coarse', ...
+    'nominal length', ...
+    'length of thread from the end', ...
+    'head diameter at the bearing face, largest', ...
+    'head height, largest', ...
+    'slot or hexalobular', ...
+    'screwdriver tip of ISO 2380-1, thickness by width', ...
+    'property class or material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = ['Cheese head screws: slotted, ISO 1207,', ...
+                              ' and hexalobular socket, ISO 14580'];
+  E = sortrows (E, {'d', 'l'});
 
 endfunction
 
@@ -528,34 +549,40 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.cheese ('data');
-%! assert_equal (numel (C), 756);
+%! assert_equal (height (C), 756);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.cheese ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '01207.400'));
-%! assert_equal ({E.designation, E.class, E.finish, E.tool, E.drive}, ...
-%!               {'Cheese head screw ISO 1207 - M5 x 20', '4.8', 'plain', ...
-%!                '1.2 x 8', 'slot'});
+%! E = C(strcmp (C.article, '01207.400'),:);
+%! assert_equal ([E.designation, E.class, E.finish, E.tool, E.drive], ...
+%!               {'Cheese head screw ISO 1207 - M5 x 20', '4.8', ...
+%!                'plain', '1.2 x 8', 'slot'});
 %!test  # its sizes
 %! C = parts.screw.cheese ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '01207.400'));
+%! E = C(strcmp (C.article, '01207.400'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.dk, E.k], [5, 0.8, 20, 20, 8.5, 3.3]);
+%!test  # each variable carries its unit and description
+%! C = parts.screw.cheese ('data', 'M5', 20);
+%! assert_equal (C.Properties.VariableUnits([3, 7]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{7}, ...
+%!               'head diameter at the bearing face, largest');
 %!test  # brass and plastic
 %! C = parts.screw.cheese ('data', 'M5', 20);
-%! assert_equal (all (ismember ({'brass', 'PA'}, {C.class})), true);
+%! assert_equal (all (ismember ({'brass', 'PA'}, C.class)), true);
 %!test  # a length of the table past 40 has b min
 %! C = parts.screw.cheese ('data', 'M5', 50);
-%! assert_equal ({C(1).designation, C(1).b}, ...
-%!               {'Cheese head screw ISO 1207 - M5 x 50', 38});
+%! assert_equal (C.designation(1), ...
+%!               {'Cheese head screw ISO 1207 - M5 x 50'});
+%! assert_equal (C.b(1), 38);
 %!test  # a length past the table is custom
 %! C = parts.screw.cheese ('data', 'M4', 60);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Cheese head screw M4 x 60 x 38'});
 %!test  # no tip assigned to the smallest sizes
 %! C = parts.screw.cheese ('data', 'M3', 10);
-%! assert_equal (unique ({C.tool}), {''});
+%! assert_equal (unique (C.tool), {''});
 %!test  # 'Drive' keeps the slotted screws
 %! C = parts.screw.cheese ('data', 'Drive', 'Slot');
-%! assert_equal (numel (C), 756);
+%! assert_equal (height (C), 756);
 %!testif ; exist ('__occt__') == 3  # head, shank and slot
 %! S = parts.screw.cheese ('solid', 'M5', 20);
 %! A = 2 * (0.6 * sqrt (4.25 ^ 2 - 0.36) + 4.25 ^ 2 * asin (0.6 / 4.25));

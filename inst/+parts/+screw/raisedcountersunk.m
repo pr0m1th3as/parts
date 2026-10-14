@@ -26,9 +26,9 @@
 ## Raised countersunk head screws, ISO 2010, 7047 and 14584.
 ##
 ## @code{@var{C} = parts.screw.raisedcountersunk (@qcode{'data'})} returns
-## every raised countersunk head screw in the catalogue as a struct array,
-## one entry for each maker's article in each size and length, sorted by
-## size and length.
+## every raised countersunk head screw in the catalogue as a table, one row
+## for each maker's article in each size and length, sorted by size and
+## length.
 ## @code{@var{C} = parts.screw.raisedcountersunk (@qcode{'data'}, @var{NAME})}
 ## returns those of the thread @var{NAME}, such as @qcode{'M5'}, and
 ## @code{@var{C} = parts.screw.raisedcountersunk (@qcode{'data'}, @var{NAME},
@@ -86,13 +86,14 @@
 ## approximate, follows from the two.  Drives are cut from the top of the
 ## dome, from which their depths are measured.
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Countersunk raised head screw ISO 7047 - M5 x 20 - H'}, without
 ## the property class, a cross recess's type after the size
-## @item @code{standard} @tab the standard when its table defines the screw,
+## @item @code{standard} @tab standard when its table defines the screw,
 ## else empty: such a screw is custom
 ## @item @code{d} @tab nominal diameter
 ## @item @code{P} @tab pitch, coarse
@@ -107,13 +108,13 @@
 ## @item @code{f} @tab height of the dome above the edge, approximate
 ## @item @code{drive} @tab @qcode{'slot'}, @qcode{'crossH'},
 ## @qcode{'crossZ'} or @qcode{'hexalobular'}
-## @item @code{tool} @tab the bit or tip, as @qcode{'PH2'}, @qcode{'T25'}
+## @item @code{tool} @tab bit or tip, as @qcode{'PH2'}, @qcode{'T25'}
 ## or @qcode{'1.2 x 6.5'}
 ## @item @code{class} @tab property class or material
-## @item @code{finish} @tab the finish as the maker names it
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{finish} @tab finish as the maker names it
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by its standard's number when its table defines it:
@@ -391,26 +392,26 @@ function C = catalogue (NAME, d, P, L, drive, bydrive, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     T = sizes ('slot');
     if (isnan (P) && any (T(:,1) == d))
       P = T(T(:,1) == d,2);
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (bydrive)
-    keep &= strcmp ({E.drive}, drive);
+    keep &= strcmp (E.drive, drive);
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -541,14 +542,38 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, h(:,2), l, b, h(:,3), d + 2 * h(:,4), ...
-                                 h(:,4), h(:,16)]), drive, tool, A(a,4:5), ...
-       repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       'dk', 'dkt', 'k', 'f', 'drive', 'tool', 'class', ...
-                       'finish', 'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, l], [1, 2]);
-  E = E(k);
+  dkt = d + 2 * h(:,4);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, h(:,2), l, b, h(:,3), dkt, h(:,4), h(:,16), ...
+             drive, tool, A(a,4), A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 'dk', 'dkt', 'k', 'f', 'drive', 'tool', ...
+                                'class', 'finish', 'maker', 'article', ...
+                                'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                'mm', 'mm', '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'standard when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch, coarse', ...
+    'nominal length, from the edge of the head', ...
+    'length of thread from the end', ...
+    'actual head diameter, largest', ...
+    ['theoretical head diameter, where the cone meets', ...
+     ' the plane of the edge'], ...
+    'height of the cone, largest', ...
+    'height of the dome above the edge, approximate', ...
+    'slot, crossH, crossZ or hexalobular', ...
+    'bit or tip', ...
+    'property class or material', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = ['Raised countersunk head screws, ISO 2010,', ...
+                              ' 7047 and 14584'];
+  E = sortrows (E, {'d', 'l'});
 
 endfunction
 
@@ -614,29 +639,38 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.raisedcountersunk ('data');
-%! assert_equal (numel (C), 570);
+%! assert_equal (height (C), 570);
+%!test  # sorted by size, then length
+%! C = parts.screw.raisedcountersunk ('data');
+%! assert_equal (issorted ([C.d, C.l], 'rows'), true);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.raisedcountersunk ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '07047.414'));
-%! assert_equal ({E.designation, E.class, E.finish, E.tool, E.drive}, ...
-%!               {'Countersunk raised head screw ISO 7047 - M5 x 20 - H', ...
-%!                '4.8', 'zinc plated', 'PH2', 'crossH'});
+%! E = C(strcmp (C.article, '07047.414'),:);
+%! assert_equal ([E.designation, E.class, E.finish, E.tool, E.drive], ...
+%!               {['Countersunk raised head screw ISO 7047', ...
+%!                 ' - M5 x 20 - H'], '4.8', 'zinc plated', 'PH2', ...
+%!                'crossH'});
 %!test  # its sizes
 %! C = parts.screw.raisedcountersunk ('data', 'M5', 20);
-%! E = C(strcmp ({C.article}, '07047.414'));
+%! E = C(strcmp (C.article, '07047.414'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.dk, E.dkt, E.k, E.f], ...
 %!               [5, 0.8, 20, 20, 9.3, 10.4, 2.7, 1.2], 1e-12);
+%!test  # each variable carries its unit and description
+%! C = parts.screw.raisedcountersunk ('data', 'M5', 20);
+%! assert_equal (C.Properties.VariableUnits([3, 10]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{10}, ...
+%!               'height of the dome above the edge, approximate');
 %!test  # a slotted screw, ISO 2010
 %! C = parts.screw.raisedcountersunk ('data', 'M5', 20, 'Drive', 'slot');
-%! assert_equal ({C(1).designation, C(1).tool}, ...
-%!               {'Countersunk raised head screw ISO 2010 - M5 x 20', ...
-%!                '1.2 x 6.5'});
+%! assert_equal ([C.designation(1), C.tool(1)], ...
+%!               {['Countersunk raised head screw ISO 2010', ...
+%!                 ' - M5 x 20'], '1.2 x 6.5'});
 %!test  # without 'Drive' every drive sold comes
 %! C = parts.screw.raisedcountersunk ('data', 'M5', 20);
-%! assert_equal (unique ({C.drive}), {'crossH', 'slot'});
+%! assert_equal (unique (C.drive)', {'crossH', 'slot'});
 %!test  # a length past the table is custom
 %! C = parts.screw.raisedcountersunk ('data', 'M4', 50, 'Drive', 'slot');
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Countersunk raised head screw M4 x 50 x 38'});
 %!testif ; exist ('__occt__') == 3  # hexalobular by default: dome, round hole
 %! S = parts.screw.raisedcountersunk ('solid', 'M5', 20);

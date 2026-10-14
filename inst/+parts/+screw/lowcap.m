@@ -25,8 +25,8 @@
 ## Hexagon socket head cap screws with low head, DIN 7984.
 ##
 ## @code{@var{C} = parts.screw.lowcap (@qcode{'data'})} returns every low
-## head cap screw in the catalogue as a struct array, one entry for each
-## maker's article in each size and length, sorted by size and length.
+## head cap screw in the catalogue as a table, one row for each maker's
+## article in each size and length, sorted by size and length.
 ## @code{@var{C} = parts.screw.lowcap (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, such as @qcode{'M8'}, and
 ## @code{@var{C} = parts.screw.lowcap (@qcode{'data'}, @var{NAME}, @var{L})}
@@ -64,12 +64,13 @@
 ## @var{s} across flats and @var{t} min deep, and the end is left flat.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation, as in
-## @qcode{'Hexagon socket head cap screw with low head DIN 7984 - M8 x
-## 20'}, without the property class
+## @item @code{designation} @tab designation, as in
+## @qcode{"Hexagon socket head cap screw with low head DIN 7984 - M8 x
+## 20"}, without the property class
 ## @item @code{standard} @tab @qcode{'DIN 7984'} when its table defines the
 ## screw, else empty: such a screw is custom
 ## @item @code{d} @tab nominal diameter
@@ -80,13 +81,13 @@
 ## @item @code{dk} @tab head diameter, largest
 ## @item @code{k} @tab head height, largest
 ## @item @code{drive} @tab @qcode{'hexsocket'}
-## @item @code{tool} @tab the hexagon key, as @qcode{'5'}
+## @item @code{tool} @tab hexagon key, as @qcode{'5'}
 ## @item @code{class} @tab property class, as the maker marks it: a leading
 ## 0, as in @qcode{'08.8'}, marks the reduced loadability of the low head
-## @item @code{finish} @tab the finish as the maker names it
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{finish} @tab finish as the maker names it
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A screw is designated by the standard's number when its table defines it:
@@ -267,23 +268,23 @@ function C = catalogue (NAME, d, P, L, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     T = sizes ();
     if (isnan (P) && any (T(:,1) == d))
       P = T(T(:,1) == d,2);
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -361,14 +362,34 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, h(:,2), l, b, h(:,6:7)]), ...
-       repmat({'hexsocket'}, n, 1), tool, A(a,3:4), ...
-       repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       'dk', 'k', 'drive', 'tool', 'class', 'finish', ...
-                       'maker', 'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, l], [1, 2]);
-  E = E(k);
+  drive = repmat ({'hexsocket'}, n, 1);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, h(:,2), l, b, h(:,6), h(:,7), drive, tool, ...
+             A(a,3), A(a,4), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 'dk', 'k', 'drive', 'tool', 'class', ...
+                                'finish', 'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                '', '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation, without the property class', ...
+    'DIN 7984 when its table defines the screw', ...
+    'nominal diameter', ...
+    'pitch, coarse', ...
+    'nominal length', ...
+    'length of thread from the end', ...
+    'head diameter, largest', ...
+    'head height, largest', ...
+    'hexsocket', ...
+    'hexagon key', ...
+    'property class, as the maker marks it', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = ['Hexagon socket head cap screws with low', ...
+                              ' head, DIN 7984'];
+  E = sortrows (E, {'d', 'l'});
 
 endfunction
 
@@ -417,24 +438,29 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.lowcap ('data');
-%! assert_equal (numel (C), 306);
+%! assert_equal (height (C), 306);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.lowcap ('data', 'M8', 20);
-%! E = C(strcmp ({C.article}, '07984.800'));
-%! assert_equal ({E.designation, E.class, E.finish, E.tool}, ...
+%! E = C(strcmp (C.article, '07984.800'),:);
+%! assert_equal ([E.designation, E.class, E.finish, E.tool], ...
 %!               {['Hexagon socket head cap screw with low head', ...
 %!                 ' DIN 7984 - M8 x 20'], ...
 %!                '08.8', 'plain', '5'});
 %!test  # its sizes
 %! C = parts.screw.lowcap ('data', 'M8', 20);
-%! E = C(strcmp ({C.article}, '07984.800'));
+%! E = C(strcmp (C.article, '07984.800'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.dk, E.k], [8, 1.25, 20, 20, 13, 5]);
+%!test  # each variable carries its unit and description
+%! C = parts.screw.lowcap ('data', 'M8', 20);
+%! assert_equal (C.Properties.VariableUnits([3, 7]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{7}, ...
+%!               'head diameter, largest');
 %!test  # a length below the dashed line has its b
 %! C = parts.screw.lowcap ('data', 'M8', 40);
-%! assert_equal (unique ([C.b]), 22);
+%! assert_equal (unique (C.b), 22);
 %!test  # a length past the table is custom
 %! C = parts.screw.lowcap ('data', 'M10', 120);
-%! assert_equal (C(1).standard, '');
+%! assert_equal (C.standard(1), {''});
 %!testif ; exist ('__occt__') == 3  # head, shank and socket
 %! S = parts.screw.lowcap ('solid', 'M8', 20);
 %! V = pi * (6.5 ^ 2 * 5 + 4 ^ 2 * 20) - sqrt (3) / 2 * 5 ^ 2 * 3.65;

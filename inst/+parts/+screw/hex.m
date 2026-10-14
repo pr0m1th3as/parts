@@ -30,8 +30,8 @@
 ## fine thread, ISO 8676).
 ##
 ## @code{@var{C} = parts.screw.hex (@qcode{'data'})} returns every hexagon
-## head bolt and screw in the catalogue as a struct array, one entry for each
-## maker's article in each size and length, sorted by size, pitch and length.
+## head bolt and screw in the catalogue as a table, one row for each maker's
+## article in each size and length, sorted by size, pitch and length.
 ## @code{@var{C} = parts.screw.hex (@qcode{'data'}, @var{NAME})} returns
 ## those of the thread @var{NAME}, a coarse thread as @qcode{'M10'} or a fine
 ## one as @qcode{'M10x1.25'}, and
@@ -86,14 +86,15 @@
 ## and the bearing face's slight cone are left out.
 ## @end table
 ##
-## Each entry is a struct with these fields, lengths in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{C})} lists; lengths are in millimetres:
 ##
 ## @multitable @columnfractions 0.16 0.84
-## @item @code{designation} @tab the designation of ISO 8991, as in
+## @item @code{designation} @tab designation of ISO 8991, as in
 ## @qcode{'Hexagon head bolt ISO 4014 - M12 x 80'}, without the property
 ## class
-## @item @code{standard} @tab the standard when its table defines the bolt
-## or screw, else empty: such a one is custom
+## @item @code{standard} @tab standard when its table defines the bolt or
+## screw, else empty: such a one is custom
 ## @item @code{d} @tab nominal diameter
 ## @item @code{P} @tab pitch
 ## @item @code{l} @tab nominal length
@@ -104,11 +105,11 @@
 ## @item @code{grade} @tab product grade, @qcode{'A'} or @qcode{'B'}
 ## @item @code{class} @tab property class or steel grade, as @qcode{'8.8'},
 ## @qcode{'A4-70'} or @qcode{'25CrMo4'}
-## @item @code{finish} @tab the finish as the maker names it, as
+## @item @code{finish} @tab finish as the maker names it, as
 ## @qcode{'plain'} or @qcode{'hot dip galvanized'}
-## @item @code{maker} @tab the maker
-## @item @code{article} @tab the maker's article number
-## @item @code{source} @tab the catalogue and page the article was read from
+## @item @code{maker} @tab maker
+## @item @code{article} @tab maker's article number
+## @item @code{source} @tab catalogue and page the article was read from
 ## @end multitable
 ##
 ## A bolt is designated by its standard's number when the standard's table
@@ -442,7 +443,7 @@ function C = catalogue (NAME, d, P, L, full, byfull, flange, maker)
     E = entries ();
   endif
 
-  keep = true (size (E));
+  keep = true (height (E), 1);
   if (! isempty (d))
     if (isnan (P))
       [H, ~] = heads ();
@@ -450,22 +451,22 @@ function C = catalogue (NAME, d, P, L, full, byfull, flange, maker)
         P = H(H(:,1) == d,2);
       endif
     endif
-    keep &= [E.d] == d & [E.P] == P;
+    keep &= E.d == d & E.P == P;
   endif
   if (! isempty (L))
-    keep &= [E.l] == L;
+    keep &= E.l == L;
   endif
   if (byfull)
-    keep &= ([E.b] == [E.l]) == full;
+    keep &= (E.b == E.l) == full;
   endif
   if (! isempty (maker))
-    keep &= strcmpi ({E.maker}, maker);
+    keep &= strcmpi (E.maker, maker);
   endif
   ## No maker's catalogue read so far sells ISO 4162
   keep &= ! flange;
-  C = E(keep);
+  C = E(keep,:);
 
-  if (isempty (C))
+  if (height (C) == 0)
     what = '';
     if (! isempty (NAME))
       what = [NAME, ' '];
@@ -1568,13 +1569,31 @@ function E = entries ()
   source = arrayfun (@(p) sprintf ("REYHER, The Catalogue, 2020.04, p. %d", ...
                                    p), [A{:,2}]', 'UniformOutput', false);
 
-  F = [name, standard, num2cell([d, P, l, b, h(:,[12, 10])]), grade, ...
-       A(a,4:5), repmat({'REYHER'}, n, 1), A(a,1), source(a)]';
-  E = cell2struct (F, {'designation', 'standard', 'd', 'P', 'l', 'b', ...
-                       's', 'k', 'grade', 'class', 'finish', 'maker', ...
-                       'article', 'source'}, 1)';
-  [~, k] = sortrows ([d, P, l], [1, 2, 3]);
-  E = E(k);
+  maker = repmat ({'REYHER'}, n, 1);
+  E = table (name, standard, d, P, l, b, h(:,12), h(:,10), grade, A(a,4), ...
+             A(a,5), maker, A(a,1), source(a));
+  E.Properties.VariableNames = {'designation', 'standard', 'd', 'P', 'l', ...
+                                'b', 's', 'k', 'grade', 'class', 'finish', ...
+                                'maker', 'article', 'source'};
+  E.Properties.VariableUnits = {'', '', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm', ...
+                                '', '', '', '', '', ''};
+  E.Properties.VariableDescriptions = {...
+    'designation of ISO 8991, without the property class', ...
+    'standard when its table defines the bolt or screw', ...
+    'nominal diameter', ...
+    'pitch', ...
+    'nominal length', ...
+    'length of thread from the end', ...
+    'width across flats', ...
+    'head height, nominal', ...
+    'product grade', ...
+    'property class or steel grade', ...
+    'finish as the maker names it', ...
+    'maker', ...
+    "maker's article number", ...
+    'catalogue and page the article was read from'};
+  E.Properties.Description = 'Hexagon head bolts and screws';
+  E = sortrows (E, {'d', 'P', 'l'});
 
 endfunction
 
@@ -1718,47 +1737,56 @@ endfunction
 
 %!test  # the catalogue, every article in every size and length
 %! C = parts.screw.hex ('data');
-%! assert_equal (numel (C), 8892);
+%! assert_equal (height (C), 8892);
+%!test  # sorted by size, pitch, then length
+%! C = parts.screw.hex ('data');
+%! assert_equal (issorted ([C.d, C.P, C.l], 'rows'), true);
 %!test  # an article as REYHER lists it
 %! C = parts.screw.hex ('data', 'M12', 80);
-%! E = C(strcmp ({C.article}, '04014.800'));
-%! assert_equal ({E.designation, E.grade, E.class, E.finish}, ...
-%!               {'Hexagon head bolt ISO 4014 - M12 x 80', 'A', '8.8', ...
-%!                'plain'});
+%! E = C(strcmp (C.article, '04014.800'),:);
+%! assert_equal ([E.designation, E.grade, E.class, E.finish], ...
+%!               {'Hexagon head bolt ISO 4014 - M12 x 80', 'A', ...
+%!                '8.8', 'plain'});
 %!test  # its sizes
 %! C = parts.screw.hex ('data', 'M12', 80);
-%! E = C(strcmp ({C.article}, '04014.800'));
+%! E = C(strcmp (C.article, '04014.800'),:);
 %! assert_equal ([E.d, E.P, E.l, E.b, E.s, E.k], [12, 1.75, 80, 30, 18, 7.5]);
 %!test  # its source
 %! C = parts.screw.hex ('data', 'M12', 80);
-%! E = C(strcmp ({C.article}, '04014.800'));
-%! assert_equal (E.source, 'REYHER, The Catalogue, 2020.04, p. 239');
+%! E = C(strcmp (C.article, '04014.800'),:);
+%! assert_equal (E.source, {'REYHER, The Catalogue, 2020.04, p. 239'});
+%!test  # each variable carries its unit and description
+%! C = parts.screw.hex ('data', 'M12', 80);
+%! assert_equal (C.Properties.VariableUnits([3, 7]), {'mm', 'mm'});
+%! assert_equal (C.Properties.VariableDescriptions{7}, 'width across flats');
 %!test  # 'FullThread' keeps the screws
 %! C = parts.screw.hex ('data', 'M12', 80, 'FullThread', true);
-%! assert_equal (unique ({C.standard}), {'ISO 4017'});
+%! assert_equal (unique (C.standard), {'ISO 4017'});
 %!test  # and false the bolts
 %! C = parts.screw.hex ('data', 'M12', 80, 'FullThread', false);
-%! assert_equal (unique ({C.standard}), {'ISO 4014'});
+%! assert_equal (unique (C.standard), {'ISO 4014'});
 %!test  # a bolt shorter than its standard's lengths, threaded to the head
 %! C = parts.screw.hex ('data', 'M10', 40);
-%! E = C(strcmp ({C.article}, '04014.800'));
-%! assert_equal ({E.designation, E.b}, {'Hexagon head screw M10 x 40', 40});
+%! E = C(strcmp (C.article, '04014.800'),:);
+%! assert_equal (E.designation, {'Hexagon head screw M10 x 40'});
+%! assert_equal (E.b, 40);
 %!test  # a bolt longer than its standard's lengths is custom
 %! C = parts.screw.hex ('data', 'M10', 110, 'FullThread', false);
-%! assert_equal (unique ({C.designation}), ...
+%! assert_equal (unique (C.designation), ...
 %!               {'Hexagon head bolt M10 x 110 x 26'});
 %!test  # fine threads, bolt and screw
 %! C = parts.screw.hex ('data', 'M10x1.25', 50);
-%! assert_equal (unique ({C.standard}), {'ISO 8676', 'ISO 8765'});
+%! assert_equal (unique (C.standard)', {'ISO 8676', 'ISO 8765'});
 %!test  # product grade B past 150
 %! C = parts.screw.hex ('data', 'M20', 160, 'FullThread', true);
-%! assert_equal (unique ({C.grade}), {'B'});
+%! assert_equal (unique (C.grade), {'B'});
 %!test  # pressure vessel grades
 %! C = parts.screw.hex ('data', 'M16', 80, 'FullThread', false);
-%! assert_equal (all (ismember ({'5.6', '25CrMo4', 'A5'}, {C.class})), true);
+%! G = {'5.6', '25CrMo4', 'A5'};
+%! assert_equal (all (ismember (G, C.class)), true);
 %!test  # hot dip galvanized
 %! C = parts.screw.hex ('data', 'M16', 80, 'FullThread', false);
-%! assert_equal (any (strcmp ({C.finish}, 'hot dip galvanized')), true);
+%! assert_equal (any (strcmp (C.finish, 'hot dip galvanized')), true);
 %!testif ; exist ('__occt__') == 3  # hexagonal head, plain shank
 %! S = parts.screw.hex ('solid', 'M12', 80);
 %! assert_equal (volume (S), sqrt (3) / 2 * 18 ^ 2 * 7.5 + pi * 36 * 80, 1e-6);

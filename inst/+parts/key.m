@@ -18,17 +18,20 @@
 ## -*- texinfo -*-
 ## @deftypefn  {parts} {@var{K} =} parts.key (@qcode{'data'})
 ## @deftypefnx {parts} {@var{K} =} parts.key (@qcode{'data'}, @var{DS})
+## @deftypefnx {parts} {@var{K} =} parts.key (@qcode{'data'}, @var{DS}, @var{L})
 ## @deftypefnx {parts} {@var{S} =} parts.key (@qcode{'solid'}, @var{DS}, @var{L})
 ## @deftypefnx {parts} {@var{S} =} parts.key (@dots{}, @var{Name}, @var{Value})
 ##
 ## Parallel keys to DIN 6885-1, form A.
 ##
 ## @code{@var{K} = parts.key (@qcode{'data'})} returns every key in the
-## catalogue as a struct array, smallest first.
-## @code{@var{K} = parts.key (@qcode{'data'}, @var{DS})} returns the key for
-## a shaft of diameter @var{DS} millimetres, over 6 up to 85.  A shaft on the
-## boundary of two rows takes the smaller key, as the table's ranges run over
-## one diameter up to the next.  Nothing is built.
+## catalogue as a table, one row for each section and standard length,
+## smallest first.  @code{@var{K} = parts.key (@qcode{'data'}, @var{DS})}
+## returns the keys for a shaft of diameter @var{DS} millimetres, over 6 up
+## to 85, one for each standard length, and @code{@var{K} = parts.key
+## (@qcode{'data'}, @var{DS}, @var{L})} the one @var{L} long.  A shaft on
+## the boundary of two rows takes the smaller key, as the table's ranges run
+## over one diameter up to the next.  Nothing is built.
 ##
 ## @code{@var{S} = parts.key (@qcode{'solid'}, @var{DS}, @var{L})} builds the
 ## key for that shaft as a @code{solid.Shape} @var{L} long, whether or not
@@ -45,17 +48,19 @@
 ## are sharp.
 ## @end table
 ##
-## Each key is a struct with these fields, in millimetres:
+## The table has these variables, each with its unit and its description,
+## which @code{summary (@var{K})} lists; all in millimetres:
 ##
 ## @multitable @columnfractions 0.12 0.88
-## @item @code{shaft} @tab the shaft diameters it serves, over the first up
-## to the second
+## @item @code{shaft} @tab shaft diameters served, over the first up to the
+## second, two columns
 ## @item @code{b} @tab width
 ## @item @code{h} @tab height
+## @item @code{l} @tab length
 ## @item @code{t1} @tab depth of the keyway in the shaft
 ## @item @code{t2} @tab depth of the keyway in the hub, over the shaft
-## @item @code{s} @tab the chamfer of the edges, smallest and largest
-## @item @code{l} @tab the standard lengths, a row vector
+## @item @code{s} @tab chamfer of the edges, smallest and largest, two
+## columns
 ## @end multitable
 ##
 ## @subheading The catalogue
@@ -93,9 +98,6 @@ function OUT = key (MODE, varargin)
       args(1) = [];
     endif
   endif
-  if (strcmp (MODE, 'data') && ! isempty (L))
-    error ("parts.key: 'data' takes a shaft diameter DS only.");
-  endif
   if (strcmp (MODE, 'solid') && isempty (L))
     error ("parts.key: a solid needs a shaft diameter DS and a length L.");
   endif
@@ -124,6 +126,58 @@ function OUT = key (MODE, varargin)
     endswitch
   endfor
 
+  K = catalogue ();
+  if (isempty (DS))
+    OUT = K;
+    return;
+  endif
+  if (! isnumeric (DS) || ! isreal (DS) || ! isscalar (DS) || ! (DS > 0))
+    error ("parts.key: DS must be a positive real scalar.");
+  endif
+  K = K(DS > K.shaft(:,1) & DS <= K.shaft(:,2), :);
+  if (height (K) == 0)
+    error ("parts.key: no key for a %g mm shaft in the catalogue.", DS);
+  endif
+  if (! isempty (L)
+      && (! isnumeric (L) || ! isreal (L) || ! isscalar (L) || ! isfinite (L)))
+    error ("parts.key: L must be a real scalar.");
+  endif
+  if (strcmp (MODE, 'data'))
+    if (! isempty (L))
+      K = K(abs (K.l - L) < 1e-9, :);
+      if (height (K) == 0)
+        error (strcat ("parts.key: no %g mm key for a %g mm shaft", ...
+                       " in the catalogue."), L, DS);
+      endif
+    endif
+    OUT = K;
+    return;
+  endif
+
+  b = K.b(1);
+  if (L <= b)
+    error ("parts.key: a %g mm wide key must be longer than %g mm.", b, b);
+  endif
+  w = b / 2;
+  R = geom.Region ([-w, w, 0; -w, L - w, -1; w, L - w, 0; w, w, -1]);
+  R.UCS = geom.UCS ([0, -1, 0], [0, 0, 0]);
+  OUT = solid.extrude (R, -K.h(1));
+  if (detailed)
+    F = [faces(OUT, 'Normal', [0, 1, 0]), faces(OUT, 'Normal', [0, -1, 0])];
+    OUT = chamfer (OUT, edges (OUT, 'Face', F), K.s(1,1));
+  endif
+
+endfunction
+
+## The catalogue as a table, built on the first call and kept for the session
+function K = catalogue ()
+
+  persistent C;
+  if (! isempty (C))
+    K = C;
+    return;
+  endif
+
   ## Shaft over, up to, b, h, t1, t2, shortest and longest length, s min
   ## and max
   T = [6, 8, 2, 2, 1.2, 1.0, 6, 20, 0.16, 0.25;
@@ -141,67 +195,58 @@ function OUT = key (MODE, varargin)
        75, 85, 22, 14, 9.0, 5.4, 63, 250, 0.6, 0.8];
   series = [6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45, 50, ...
             56, 63, 70, 80, 90, 100, 110, 125, 140, 160, 180, 200, 220, 250];
-  K = struct ('shaft', num2cell (T(:,1:2), 2), 'b', num2cell (T(:,3)), ...
-              'h', num2cell (T(:,4)), 't1', num2cell (T(:,5)), ...
-              't2', num2cell (T(:,6)), 's', num2cell (T(:,9:10), 2), ...
-              'l', arrayfun (@(k) series(series >= T(k,7)
-                                         & series <= T(k,8)), ...
-                             (1:rows (T))', 'UniformOutput', false));
-  if (isempty (DS))
-    OUT = K;
-    return;
-  endif
-
-  if (! isnumeric (DS) || ! isreal (DS) || ! isscalar (DS) || ! (DS > 0))
-    error ("parts.key: DS must be a positive real scalar.");
-  endif
-  k = find (DS > T(:,1) & DS <= T(:,2));
-  if (isempty (k))
-    error ("parts.key: no key for a %g mm shaft in the catalogue.", DS);
-  endif
-  K = K(k);
-  if (strcmp (MODE, 'data'))
-    OUT = K;
-    return;
-  endif
-
-  if (! isnumeric (L) || ! isreal (L) || ! isscalar (L) || ! isfinite (L))
-    error ("parts.key: L must be a real scalar.");
-  endif
-  if (L <= K.b)
-    error ("parts.key: a %g mm wide key must be longer than %g mm.", K.b, ...
-           K.b);
-  endif
-  w = K.b / 2;
-  R = geom.Region ([-w, w, 0; -w, L - w, -1; w, L - w, 0; w, w, -1]);
-  R.UCS = geom.UCS ([0, -1, 0], [0, 0, 0]);
-  OUT = solid.extrude (R, -K.h);
-  if (detailed)
-    F = [faces(OUT, 'Normal', [0, 1, 0]), faces(OUT, 'Normal', [0, -1, 0])];
-    OUT = chamfer (OUT, edges (OUT, 'Face', F), K.s(1));
-  endif
+  ## One row for each section and standard length
+  l = arrayfun (@(k) series(series >= T(k,7) & series <= T(k,8))', ...
+                (1:rows (T))', 'UniformOutput', false);
+  k = repelem ((1:rows (T))', cellfun (@numel, l));
+  T = T(k,:);
+  l = vertcat (l{:});
+  C = table (T(:,1:2), T(:,3), T(:,4), l, T(:,5), T(:,6), T(:,9:10));
+  C.Properties.VariableNames = {'shaft', 'b', 'h', 'l', 't1', 't2', 's'};
+  C.Properties.VariableUnits = {'mm', 'mm', 'mm', 'mm', 'mm', 'mm', 'mm'};
+  C.Properties.VariableDescriptions = {...
+    'shaft diameters served, over the first up to the second', ...
+    'width', ...
+    'height', ...
+    'length', ...
+    'depth of the keyway in the shaft', ...
+    'depth of the keyway in the hub, over the shaft', ...
+    'chamfer of the edges, smallest and largest'};
+  C.Properties.Description = 'Parallel keys to DIN 6885-1, form A';
+  K = C;
 
 endfunction
 
 %!test  # the key for a 20 mm shaft
-%! K = parts.key ('data', 20);
+%! K = parts.key ('data', 20, 32);
 %! assert_equal ([K.shaft, K.b, K.h, K.t1, K.t2], [17, 22, 6, 6, 3.5, 2.8]);
 %!test  # its chamfer
-%! K = parts.key ('data', 20);
+%! K = parts.key ('data', 20, 32);
 %! assert_equal (K.s, [0.25, 0.4]);
-%!test  # its lengths
+%!test  # its lengths, one row each
 %! K = parts.key ('data', 20);
-%! assert_equal (K.l, [14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56, ...
-%!                     63, 70]);
+%! assert_equal (K.l', [14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56, ...
+%!                      63, 70]);
+%!test  # one section on every row
+%! K = parts.key ('data', 20);
+%! assert_equal (unique ([K.b, K.h], 'rows'), [6, 6]);
 %!test  # a shaft on a row boundary takes the smaller key
-%! K = parts.key ('data', 30);
+%! K = parts.key ('data', 30, 18);
 %! assert_equal ([K.b, K.h], [8, 7]);
 %!test  # the largest row
-%! K = parts.key ('data', 85);
+%! K = parts.key ('data', 85, 250);
 %! assert_equal ([K.b, K.h, K.t1, K.t2], [22, 14, 9, 5.4]);
-%!test  # every key, smallest first
+%!test  # every section, smallest first
 %! K = parts.key ('data');
-%! assert_equal ([K.b], [2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
+%! assert_equal (unique (K.b)', [2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
+%!test  # sorted by width, then length
+%! K = parts.key ('data');
+%! assert_equal (issorted ([K.b, K.l], 'rows'), true);
+%!test  # each variable carries its unit and description
+%! K = parts.key ('data', 20, 32);
+%! assert_equal (K.Properties.VariableUnits{4}, 'mm');
+%! assert_equal (K.Properties.VariableDescriptions{5}, ...
+%!               'depth of the keyway in the shaft');
 %!testif ; exist ('__occt__') == 3  # the shape: L long on z, h high on y
 %! S = parts.key ('solid', 20, 32);
 %! assert_equal (bbox (S), [-3, 0, 0, 3, 6, 32], 1e-6);
@@ -228,8 +273,6 @@ endfunction
 
 %!error<parts.key: MODE must be 'data' or 'solid'.> parts.key ()
 %!error<parts.key: MODE must be 'data' or 'solid'.> parts.key (20)
-%!error<parts.key: 'data' takes a shaft diameter DS only.> ...
-%! parts.key ('data', 20, 32)
 %!error<parts.key: a solid needs a shaft diameter DS and a length L.> ...
 %! parts.key ('solid', 20)
 %!error<parts.key: Name/Value arguments must come in pairs.> ...
@@ -248,5 +291,8 @@ endfunction
 %!error<parts.key: no key for a 90 mm shaft in the catalogue.> ...
 %! parts.key ('solid', 90, 100)
 %!error<parts.key: L must be a real scalar.> parts.key ('solid', 20, [30, 40])
+%!error<parts.key: L must be a real scalar.> parts.key ('data', 20, [30, 40])
+%!error<parts.key: no 30 mm key for a 20 mm shaft in the catalogue.> ...
+%! parts.key ('data', 20, 30)
 %!error<parts.key: a 6 mm wide key must be longer than 6 mm.> ...
 %! parts.key ('solid', 20, 6)
