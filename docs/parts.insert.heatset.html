@@ -332,8 +332,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>C</var> = parts.insert.heatset (<code>'data'</code>)</code> returns every insert
- in the catalogue as a struct array, one entry for each insert, sorted by
- thread, length and outside diameter.
+ in the catalogue as a table, one row for each insert and maker that sells
+ it, sorted by thread, length and outside diameter.
  <code><var>C</var> = parts.insert.heatset (<code>'data'</code>, <var>NAME</var>)</code> returns
  those of the thread <var>NAME</var>, as <code>'M4'</code>, and
  <code><var>C</var> = parts.insert.heatset (<code>'data'</code>, <var>NAME</var>, <var>L</var>)</code>
@@ -347,19 +347,20 @@
  drilled along -<em class="math">z</em>, it sits flush with the surface, as it is set.
  <code><var>S</var>.Name</code> holds the designation, as
  <code>'Heat-set insert M4 x 8.1'</code>.  Only inserts in the catalogue are
- built.
+ built, to ruthex&rsquo;s dimensions where ruthex sells the insert, else to CNC
+ Kitchen&rsquo;s.
 </p>
 <p> No function cuts or sizes the hole, here or in <code>drafting</code>: a printed
  hole comes out a different size with each printer, material and setting,
- so the designer makes it.  The entry&rsquo;s <var>d3</var> is the makers&rsquo;
- recommendation to start from; its <var>t</var> and <var>w</var> are the depth and
- wall the part must leave for the insert.
+ so the designer makes it.  A row&rsquo;s <var>d3</var> is its maker&rsquo;s recommendation
+ to start from; its <var>t</var> and <var>w</var> are the depth and wall the part
+ must leave for the insert.
 </p>
 <p> Name/Value pairs:
 </p>
 <dl compact="compact">
 <dt> <code>'Maker'</code></dt>
-<dd> For <code>'data'</code>: only the inserts that maker sells, <code>'ruthex'</code> or
+<dd> For <code>'data'</code>: only that maker&rsquo;s rows, <code>'ruthex'</code> or
  <code>'CNC Kitchen'</code>, in any case.</dd>
 <dt> <code>'Diameter'</code></dt>
 <dd> Only the insert of that outside diameter <var>d1</var>.  Two inserts are M3 x
@@ -373,25 +374,27 @@
  nominal diameter.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
 <tr><td width="16%"><code>designation</code></td><td width="84%">thread by length, as <code>'M4 x 8.1'</code>,
  and by outside diameter between them where two inserts share both, as
  <code>'M3 x 5 x 4'</code></td></tr>
-<tr><td width="16%"><code>thread</code></td><td width="84%">the thread, as <code>'M4'</code></td></tr>
+<tr><td width="16%"><code>thread</code></td><td width="84%">thread, as <code>'M4'</code></td></tr>
 <tr><td width="16%"><code>d</code></td><td width="84%">nominal diameter of the thread</td></tr>
 <tr><td width="16%"><code>L</code></td><td width="84%">length, nominal</td></tr>
 <tr><td width="16%"><code>d1</code></td><td width="84%">outside diameter, over the knurl</td></tr>
-<tr><td width="16%"><code>d2</code></td><td width="84%">diameter of the pilot at the lower end; NaN where
- no maker gives one</td></tr>
-<tr><td width="16%"><code>d3</code></td><td width="84%">diameter of the hole the makers recommend</td></tr>
+<tr><td width="16%"><code>d2</code></td><td width="84%">diameter of the pilot at the lower end; <code>NaN</code>
+ where the maker gives none</td></tr>
+<tr><td width="16%"><code>d3</code></td><td width="84%">diameter of the hole the maker recommends</td></tr>
 <tr><td width="16%"><code>t</code></td><td width="84%">depth of a blind hole, smallest: <var>L</var> + 1</td></tr>
 <tr><td width="16%"><code>w</code></td><td width="84%">wall round the hole, smallest</td></tr>
-<tr><td width="16%"><code>makers</code></td><td width="84%">the makers who sell the insert, as a cell array</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the documents the insert was read from, one for
- each maker, as a cell array</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number; empty where the maker&rsquo;s
+ document gives none</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">document the insert was read from</td></tr>
 </table>
 </div>
 
@@ -429,20 +432,20 @@
 <a name="The-catalogue"></a>
 <h3 class="subheading">The catalogue</h3>
 
-<p> Every insert ruthex or CNC Kitchen sells with a metric thread.  The values
- are ruthex&rsquo;s where it sells the insert, CNC Kitchen&rsquo;s otherwise, but for
- the wall, which is the larger of the two.  Where both sell an insert they
- agree, except that CNC Kitchen recommends holes 0.1 larger from M4 to M8,
- gives M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3
- x 5 x 4 a wall of 1.6 against 1.3.
+<p> Every insert ruthex or CNC Kitchen sells with a metric thread, a row for
+ each maker with its own values.  Where both sell an insert they agree,
+ except that CNC Kitchen recommends holes 0.1 larger from M4 to M8, gives
+ M8 x 12.7 an outside diameter of 10.2 against 10.1, and gives the M3 x 5
+ x 4 a wall of 1.6 against 1.3.
 </p>
 <p> ruthex: the <cite>RX series product data sheet</cite>, metric ISO thread, status
- 15.08.2022, page 1, for every insert but two sold since, read from the
- drawings on their packets as ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8)
- and M10 x 12.7 (RX-M10x12.7).
+ 15.08.2022, page 1, dimensions and order numbers, for every insert but two
+ sold since, read from the drawings and item numbers on their packets as
+ ruthex.de shows them: M6 x 6.8 (RX-M6Sx6.8) and M10 x 12.7
+ (RX-M10x12.7).
 </p>
 <p> CNC Kitchen: <cite>Dimensions &amp; Design Guidelines</cite>, metric inserts, June
- 2025.  It gives no pilot diameter.
+ 2025.  It gives no pilot diameter and no article numbers.
 </p>
 <p> The depth of a blind hole, <var>L</var> + 1, is drawn by both.  The proportions
  of the form come from the makers&rsquo; own published STEP models,
@@ -453,7 +456,7 @@
   <a href="parts.nut.hex.html">parts.nut.hex</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+insert/heatset.m">parts.insert.heatset</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+insert/heatset.m">parts.insert.heatset</a>
 </p>
 </div>
 

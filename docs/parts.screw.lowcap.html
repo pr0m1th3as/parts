@@ -331,8 +331,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>C</var> = parts.screw.lowcap (<code>'data'</code>)</code> returns every low
- head cap screw in the catalogue as a struct array, one entry for each
- maker&rsquo;s article in each size and length, sorted by size and length.
+ head cap screw in the catalogue as a table, one row for each maker&rsquo;s
+ article in each size and length, sorted by size and length.
  <code><var>C</var> = parts.screw.lowcap (<code>'data'</code>, <var>NAME</var>)</code> returns
  those of the thread <var>NAME</var>, such as <code>'M8'</code>, and
  <code><var>C</var> = parts.screw.lowcap (<code>'data'</code>, <var>NAME</var>, <var>L</var>)</code>
@@ -368,13 +368,14 @@
  <var>s</var> across flats and <var>t</var> min deep, and the end is left flat.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>designation</code></td><td width="84%">the designation, as in
- <code>'Hexagon socket head cap screw with low head DIN 7984 - M8 x
- 20'</code>, without the property class</td></tr>
+<tr><td width="16%"><code>designation</code></td><td width="84%">designation, as in
+ <code>&quot;Hexagon socket head cap screw with low head DIN 7984 - M8 x
+ 20&quot;</code>, without the property class</td></tr>
 <tr><td width="16%"><code>standard</code></td><td width="84%"><code>'DIN 7984'</code> when its table defines the
  screw, else empty: such a screw is custom</td></tr>
 <tr><td width="16%"><code>d</code></td><td width="84%">nominal diameter</td></tr>
@@ -385,13 +386,13 @@
 <tr><td width="16%"><code>dk</code></td><td width="84%">head diameter, largest</td></tr>
 <tr><td width="16%"><code>k</code></td><td width="84%">head height, largest</td></tr>
 <tr><td width="16%"><code>drive</code></td><td width="84%"><code>'hexsocket'</code></td></tr>
-<tr><td width="16%"><code>tool</code></td><td width="84%">the hexagon key, as <code>'5'</code></td></tr>
+<tr><td width="16%"><code>tool</code></td><td width="84%">hexagon key, as <code>'5'</code></td></tr>
 <tr><td width="16%"><code>class</code></td><td width="84%">property class, as the maker marks it: a leading
  0, as in <code>'08.8'</code>, marks the reduced loadability of the low head</td></tr>
-<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it</td></tr>
-<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
-<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+<tr><td width="16%"><code>finish</code></td><td width="84%">finish as the maker names it</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">catalogue and page the article was read from</td></tr>
 </table>
 </div>
 
@@ -416,7 +417,7 @@
   <a href="parts.screw.cap.html">parts.screw.cap</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+screw/lowcap.m">parts.screw.lowcap</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+screw/lowcap.m">parts.screw.lowcap</a>
 </p>
 </div>
 

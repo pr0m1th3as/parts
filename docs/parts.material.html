@@ -329,30 +329,33 @@
 </p>
 <div class="ms-5">
 <p> <code><var>M</var> = parts.material ()</code> returns every material in the catalogue
- as a struct array.  <code><var>M</var> = parts.material (<var>NAME</var>)</code> returns the
- one named, such as <code>'C45'</code>.  For a metal, whose strength depends on
- the size of the section, <code><var>M</var> = parts.material (<var>NAME</var>,
- <var>SIZE</var>)</code> returns the strength for a section <var>SIZE</var> millimetres
- across, the diameter of a bar or the thickness of a plate; without
- <var>SIZE</var> it returns the smallest section&rsquo;s.
+ as a table, one row for each material and range of section sizes.  A
+ metal&rsquo;s strength depends on the size of the section, the diameter of a bar
+ or the thickness of a plate, so its source tabulates it by ranges, a row
+ each; a polymer&rsquo;s does not, and it has one row.  <code><var>M</var> =
+ parts.material (<var>NAME</var>)</code> returns the rows of the one named, such as
+ <code>'C45'</code>, and <code><var>M</var> = parts.material (<var>NAME</var>,
+ <var>SIZE</var>)</code> the one row for a section <var>SIZE</var> millimetres across.
 </p>
-<p> Each material is a struct with these fields, stresses in megapascals:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>M</var>)</code> lists; stresses are in megapascals:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>name</code></td><td width="84%">the name it is asked for by</td></tr>
+<tr><td width="16%"><code>name</code></td><td width="84%">name it is asked for by</td></tr>
 <tr><td width="16%"><code>class</code></td><td width="84%"><code>'metal'</code>, <code>'machined polymer'</code> or
  <code>'printed polymer'</code></td></tr>
+<tr><td width="16%"><code>section</code></td><td width="84%">sizes of section the row holds for, over the
+ first up to the second, two columns; 0 to <code>Inf</code> for a polymer</td></tr>
 <tr><td width="16%"><code>E</code></td><td width="84%">Young&rsquo;s modulus</td></tr>
 <tr><td width="16%"><code>nu</code></td><td width="84%">Poisson&rsquo;s ratio</td></tr>
 <tr><td width="16%"><code>Rp</code></td><td width="84%">yield strength, 0.2 per cent proof stress or tensile
- stress at yield; empty where the source gives none</td></tr>
-<tr><td width="16%"><code>Rm</code></td><td width="84%">tensile strength; empty where the source gives none</td></tr>
-<tr><td width="16%"><code>A</code></td><td width="84%">elongation at break, per cent; empty where the source
- gives none</td></tr>
+ stress at yield; <code>NaN</code> where the source gives none</td></tr>
+<tr><td width="16%"><code>Rm</code></td><td width="84%">tensile strength; <code>NaN</code> where the source gives
+ none</td></tr>
+<tr><td width="16%"><code>A</code></td><td width="84%">elongation at break, per cent; <code>NaN</code> where the
+ source gives none</td></tr>
 <tr><td width="16%"><code>rho</code></td><td width="84%">density, kilograms per cubic metre</td></tr>
-<tr><td width="16%"><code>sizes</code></td><td width="84%">for a metal, the rows <code>[<var>up to</var>, Rp, Rm,
- A]</code> the strength is tabulated in; empty for a polymer</td></tr>
 <tr><td width="16%"><code>source</code></td><td width="84%">where the values come from</td></tr>
 </table>
 </div>
@@ -403,7 +406,7 @@
   <a href="parts.dowel.html">parts.dowel</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/material.m">parts.material</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/material.m">parts.material</a>
 </p>
 </div>
 

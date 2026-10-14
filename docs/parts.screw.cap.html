@@ -331,8 +331,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>C</var> = parts.screw.cap (<code>'data'</code>)</code> returns every cap screw
- in the catalogue as a struct array, one entry for each maker&rsquo;s article in
- each size and length, sorted by size and length.
+ in the catalogue as a table, one row for each maker&rsquo;s article in each
+ size and length, sorted by size and length.
  <code><var>C</var> = parts.screw.cap (<code>'data'</code>, <var>NAME</var>)</code> returns
  those of the thread <var>NAME</var>, such as <code>'M5'</code>, and
  <code><var>C</var> = parts.screw.cap (<code>'data'</code>, <var>NAME</var>, <var>L</var>)</code>
@@ -378,11 +378,12 @@
  flat, its chamfer not given by the sources.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>designation</code></td><td width="84%">the designation of ISO 8991, as in
+<tr><td width="16%"><code>designation</code></td><td width="84%">designation of ISO 8991, as in
  <code>'Hexagon socket head cap screw ISO 4762 - M5 x 20'</code>, without the
  property class</td></tr>
 <tr><td width="16%"><code>standard</code></td><td width="84%"><code>'ISO 4762'</code> or <code>'ISO 14579'</code>
@@ -396,15 +397,15 @@
 <tr><td width="16%"><code>dk</code></td><td width="84%">head diameter, plain head, largest</td></tr>
 <tr><td width="16%"><code>k</code></td><td width="84%">head height, largest</td></tr>
 <tr><td width="16%"><code>drive</code></td><td width="84%"><code>'hexsocket'</code> or <code>'hexalobular'</code></td></tr>
-<tr><td width="16%"><code>tool</code></td><td width="84%">the key or bit, as <code>'4'</code> or <code>'T30'</code></td></tr>
+<tr><td width="16%"><code>tool</code></td><td width="84%">key or bit, as <code>'4'</code> or <code>'T30'</code></td></tr>
 <tr><td width="16%"><code>class</code></td><td width="84%">property class or stainless steel grade, as
  <code>'12.9'</code> or <code>'A2-70'</code>; a grade alone, <code>'A2'</code>, where
  the maker&rsquo;s class depends on production</td></tr>
-<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it, as
+<tr><td width="16%"><code>finish</code></td><td width="84%">finish as the maker names it, as
  <code>'plain'</code> or <code>'zinc plated'</code></td></tr>
-<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
-<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">catalogue and page the article was read from</td></tr>
 </table>
 </div>
 
@@ -443,7 +444,7 @@
   <a href="parts.key.html">parts.key</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+screw/cap.m">parts.screw.cap</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+screw/cap.m">parts.screw.cap</a>
 </p>
 </div>
 

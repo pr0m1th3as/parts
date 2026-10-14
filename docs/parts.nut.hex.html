@@ -332,8 +332,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>C</var> = parts.nut.hex (<code>'data'</code>)</code> returns every hexagon nut
- in the catalogue as a struct array, one entry for each maker&rsquo;s article in
- each size, sorted by size and pitch.
+ in the catalogue as a table, one row for each maker&rsquo;s article in each
+ size, sorted by size and pitch.
  <code><var>C</var> = parts.nut.hex (<code>'data'</code>, <var>NAME</var>)</code> returns those
  of the thread <var>NAME</var>, a coarse thread as <code>'M10'</code> or a fine one
  as <code>'M10x1.25'</code>: every article sold as that nut, each with its
@@ -371,14 +371,15 @@
  its collar and insert to the maker.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>designation</code></td><td width="84%">the designation of ISO 8991, as in
+<tr><td width="16%"><code>designation</code></td><td width="84%">designation of ISO 8991, as in
  <code>'Hexagon regular nut ISO 4032 - M12'</code>, without the property class</td></tr>
-<tr><td width="16%"><code>standard</code></td><td width="84%">the standard when its table defines the nut,
- else empty: such a nut is custom</td></tr>
+<tr><td width="16%"><code>standard</code></td><td width="84%">standard when its table defines the nut, else
+ empty: such a nut is custom</td></tr>
 <tr><td width="16%"><code>d</code></td><td width="84%">nominal diameter</td></tr>
 <tr><td width="16%"><code>P</code></td><td width="84%">pitch</td></tr>
 <tr><td width="16%"><code>s</code></td><td width="84%">width across flats, nominal</td></tr>
@@ -392,11 +393,11 @@
  above</td></tr>
 <tr><td width="16%"><code>class</code></td><td width="84%">property class or material, as <code>'8'</code>,
  <code>'A4-70'</code> or <code>'brass'</code></td></tr>
-<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it, as
+<tr><td width="16%"><code>finish</code></td><td width="84%">finish as the maker names it, as
  <code>'plain'</code> or <code>'hot dip galvanized'</code></td></tr>
-<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
-<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">catalogue and page the article was read from</td></tr>
 </table>
 </div>
 
@@ -431,7 +432,7 @@
   <a href="parts.screw.cap.html">parts.screw.cap</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+nut/hex.m">parts.nut.hex</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+nut/hex.m">parts.nut.hex</a>
 </p>
 </div>
 

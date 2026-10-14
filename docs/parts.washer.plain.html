@@ -331,8 +331,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>C</var> = parts.washer.plain (<code>'data'</code>)</code> returns every plain
- washer in the catalogue as a struct array, one entry for each maker&rsquo;s
- article in each size, sorted by size.
+ washer in the catalogue as a table, one row for each maker&rsquo;s article in
+ each size, sorted by size.
  <code><var>C</var> = parts.washer.plain (<code>'data'</code>, <var>NAME</var>)</code> returns
  those for the screw thread <var>NAME</var>, as <code>'M8'</code>: every article
  sold as that washer, each with its hardness class, material and finish.
@@ -365,13 +365,14 @@
  (<code>false</code>) it is a plain ring.  The other washers have no detail.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>designation</code></td><td width="84%">the designation of the standard, as in
+<tr><td width="16%"><code>designation</code></td><td width="84%">designation of the standard, as in
  <code>'Washer ISO 7089 - 8'</code>, without the hardness class</td></tr>
-<tr><td width="16%"><code>standard</code></td><td width="84%">the standard</td></tr>
+<tr><td width="16%"><code>standard</code></td><td width="84%">standard</td></tr>
 <tr><td width="16%"><code>d</code></td><td width="84%">nominal size, the diameter of the screw thread</td></tr>
 <tr><td width="16%"><code>d1</code></td><td width="84%">inside diameter, nominal, the smallest</td></tr>
 <tr><td width="16%"><code>d2</code></td><td width="84%">outside diameter, nominal, the largest</td></tr>
@@ -380,11 +381,11 @@
  <code>'300 HV'</code>; empty for a material the standards give none</td></tr>
 <tr><td width="16%"><code>material</code></td><td width="84%"><code>'steel'</code>, a stainless steel as
  <code>'A2'</code>, or another as <code>'brass'</code></td></tr>
-<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it, as
+<tr><td width="16%"><code>finish</code></td><td width="84%">finish as the maker names it, as
  <code>'plain'</code> or <code>'zinc plated'</code></td></tr>
-<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
-<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">catalogue and page the article was read from</td></tr>
 </table>
 </div>
 
@@ -412,7 +413,7 @@
   <a href="parts.screw.hex.html">parts.screw.hex</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+washer/plain.m">parts.washer.plain</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+washer/plain.m">parts.washer.plain</a>
 </p>
 </div>
 

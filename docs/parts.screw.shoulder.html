@@ -334,8 +334,8 @@
  <var>L</var>, from the underside of the head to the end of the shoulder.
 </p>
 <p> <code><var>C</var> = parts.screw.shoulder (<code>'data'</code>)</code> returns every
- shoulder screw in the catalogue as a struct array, one entry for each
- maker&rsquo;s article in each size and length, sorted by shoulder diameter and
+ shoulder screw in the catalogue as a table, one row for each maker&rsquo;s
+ article in each size and length, sorted by shoulder diameter and
  length.  <code><var>C</var> = parts.screw.shoulder (<code>'data'</code>, <var>DS</var>)</code>
  returns those of shoulder diameter <var>DS</var>, and
  <code><var>C</var> = parts.screw.shoulder (<code>'data'</code>, <var>DS</var>, <var>L</var>)</code>
@@ -369,11 +369,12 @@
  <var>r2</var> and the chamfer at the end of the thread are left out.</dd>
 </dl>
 
-<p> Each entry is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>C</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
-<tr><td width="16%"><code>designation</code></td><td width="84%">the designation of ISO 8991, as in
+<tr><td width="16%"><code>designation</code></td><td width="84%">designation of ISO 8991, as in
  <code>'Hexagon socket head shoulder screw ISO 7379 - 10 x 40'</code>, without
  the property class</td></tr>
 <tr><td width="16%"><code>standard</code></td><td width="84%"><code>'ISO 7379'</code> when the standard defines
@@ -388,12 +389,12 @@
 <tr><td width="16%"><code>fit</code></td><td width="84%">tolerance of the shoulder, <code>'f9'</code> as
  ISO 7379 gives it or <code>'h8'</code></td></tr>
 <tr><td width="16%"><code>drive</code></td><td width="84%"><code>'hexsocket'</code></td></tr>
-<tr><td width="16%"><code>tool</code></td><td width="84%">the hexagon key, as <code>'5'</code></td></tr>
+<tr><td width="16%"><code>tool</code></td><td width="84%">hexagon key, as <code>'5'</code></td></tr>
 <tr><td width="16%"><code>class</code></td><td width="84%">property class or stainless steel grade</td></tr>
-<tr><td width="16%"><code>finish</code></td><td width="84%">the finish as the maker names it</td></tr>
-<tr><td width="16%"><code>maker</code></td><td width="84%">the maker</td></tr>
-<tr><td width="16%"><code>article</code></td><td width="84%">the maker&rsquo;s article number</td></tr>
-<tr><td width="16%"><code>source</code></td><td width="84%">the catalogue and page the article was read from</td></tr>
+<tr><td width="16%"><code>finish</code></td><td width="84%">finish as the maker names it</td></tr>
+<tr><td width="16%"><code>maker</code></td><td width="84%">maker</td></tr>
+<tr><td width="16%"><code>article</code></td><td width="84%">maker&rsquo;s article number</td></tr>
+<tr><td width="16%"><code>source</code></td><td width="84%">catalogue and page the article was read from</td></tr>
 </table>
 </div>
 
@@ -422,7 +423,7 @@
   <a href="parts.screw.set.html">parts.screw.set</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+screw/shoulder.m">parts.screw.shoulder</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+screw/shoulder.m">parts.screw.shoulder</a>
 </p>
 </div>
 

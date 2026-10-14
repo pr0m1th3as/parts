@@ -324,16 +324,18 @@
             <div class="card-body">
 <p class="h5 fs"><code>parts: <var>P</var> = <b>parts.dowel</b> (<code>'data'</code>)</code></p>
 <p class="h5 fs"><code>parts: <var>P</var> = <b>parts.dowel</b> (<code>'data'</code>, <var>D</var>)</code></p>
+<p class="h5 fs"><code>parts: <var>P</var> = <b>parts.dowel</b> (<code>'data'</code>, <var>D</var>, <var>L</var>)</code></p>
 <p class="h5 fs"><code>parts: <var>S</var> = <b>parts.dowel</b> (<code>'solid'</code>, <var>D</var>, <var>L</var>)</code></p>
 <p class="h5 fs fs-last"><code>parts: <var>S</var> = <b>parts.dowel</b> (&hellip;, <var>Name</var>, <var>Value</var>)</code></p>
 <p> Parallel dowel pins to ISO 8734, hardened.
 </p>
 <div class="ms-5">
-<p> <code><var>P</var> = parts.dowel (<code>'data'</code>)</code> returns every diameter in
- the catalogue as a struct array, smallest first.
- <code><var>P</var> = parts.dowel (<code>'data'</code>, <var>D</var>)</code> returns the one of
- diameter <var>D</var> millimetres, with the lengths in stock.  Nothing is
- built.
+<p> <code><var>P</var> = parts.dowel (<code>'data'</code>)</code> returns every pin in the
+ catalogue as a table, one row for each diameter and length in stock,
+ smallest first.  <code><var>P</var> = parts.dowel (<code>'data'</code>, <var>D</var>)</code>
+ returns the pins of diameter <var>D</var> millimetres, one for each length in
+ stock, and <code><var>P</var> = parts.dowel (<code>'data'</code>, <var>D</var>,
+ <var>L</var>)</code> the one <var>L</var> long.  Nothing is built.
 </p>
 <p> <code><var>S</var> = parts.dowel (<code>'solid'</code>, <var>D</var>, <var>L</var>)</code> builds
  the pin of diameter <var>D</var> as a <code>solid.Shape</code> <var>L</var> long, whether
@@ -348,16 +350,17 @@
  at 15 degrees.  By default (<code>false</code>) the pin is a plain cylinder.</dd>
 </dl>
 
-<p> Each diameter is a struct with these fields, lengths in millimetres:
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>P</var>)</code> lists; lengths are in millimetres:
 </p>
 <div class="table-responsive">
 <table class="table table-striped table-bordered table-sm">
 <tr><td width="12%"><code>d</code></td><td width="88%">nominal diameter, toleranced m6</td></tr>
-<tr><td width="12%"><code>c</code></td><td width="88%">the chamfer at each end, approximate</td></tr>
-<tr><td width="12%"><code>l</code></td><td width="88%">the lengths in stock, a row vector</td></tr>
-<tr><td width="12%"><code>maker</code></td><td width="88%">the maker</td></tr>
-<tr><td width="12%"><code>article</code></td><td width="88%">the maker&rsquo;s article number</td></tr>
-<tr><td width="12%"><code>source</code></td><td width="88%">the catalogue and page the pin was read from</td></tr>
+<tr><td width="12%"><code>l</code></td><td width="88%">length</td></tr>
+<tr><td width="12%"><code>c</code></td><td width="88%">chamfer at each end, approximate</td></tr>
+<tr><td width="12%"><code>maker</code></td><td width="88%">maker</td></tr>
+<tr><td width="12%"><code>article</code></td><td width="88%">maker&rsquo;s article number</td></tr>
+<tr><td width="12%"><code>source</code></td><td width="88%">catalogue and pages the pin was read from</td></tr>
 </table>
 </div>
 
@@ -381,7 +384,7 @@
   <a href="parts.key.html">parts.key</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/dowel.m">parts.dowel</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/dowel.m">parts.dowel</a>
 </p>
 </div>
 

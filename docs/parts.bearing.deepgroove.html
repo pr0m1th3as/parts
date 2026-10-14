@@ -329,8 +329,8 @@
 </p>
 <div class="ms-5">
 <p> <code><var>B</var> = parts.bearing.deepgroove (<code>'data'</code>)</code> returns every
- bearing in the catalogue as a struct array, sorted by bore, then outside
- diameter, then width.
+ bearing in the catalogue as a table, one row per bearing, sorted by bore,
+ then outside diameter, then width.
  <code><var>B</var> = parts.bearing.deepgroove (<code>'data'</code>,
  <var>DESIGNATION</var>)</code> returns the one bearing named, such as <code>'6205'</code>
  or <code>'61930 MA'</code>.  Nothing is built.
@@ -349,7 +349,8 @@
  rings are rounded to <var>r</var>.  It shows the bearing; it does not stand
  for the maker&rsquo;s internal design.
 </p>
-<p> Each bearing is a struct with these fields, lengths in millimetres, loads
+<p> The table has these variables, each with its unit and its description,
+ which <code>summary (<var>B</var>)</code> lists; lengths are in millimetres, loads
  in newtons:
 </p>
 <div class="table-responsive">
@@ -389,7 +390,7 @@
   <a href="parts.key.html">parts.key</a>
 </p>
 <p><strong>Source Code: </strong>
-  <a href="https://github.com/pr0m1th3as/parts/blob/fdc82c2/inst/+parts/+bearing/deepgroove.m">parts.bearing.deepgroove</a>
+  <a href="https://github.com/pr0m1th3as/parts/blob/bfcdf70/inst/+parts/+bearing/deepgroove.m">parts.bearing.deepgroove</a>
 </p>
 </div>
 
