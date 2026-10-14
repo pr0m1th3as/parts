@@ -1,0 +1,28 @@
+parts >> Catalogue of Standard Machine Parts
+Bearings
+ parts.bearing.deepgroove
+Screws
+ parts.screw.button
+ parts.screw.cap
+ parts.screw.cheese
+ parts.screw.countersunk
+ parts.screw.hex
+ parts.screw.lowcap
+ parts.screw.pan
+ parts.screw.raisedcountersunk
+ parts.screw.set
+ parts.screw.shoulder
+Nuts
+ parts.nut.flange
+ parts.nut.hex
+Washers
+ parts.washer.plain
+Rings
+ parts.ring.retaining
+Inserts
+ parts.insert.heatset
+Pins and keys
+ parts.dowel
+ parts.key
+Materials
+ parts.material

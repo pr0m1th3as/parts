@@ -1,0 +1,28 @@
+Summary of important user-visible changes for parts 0.1.0:
+-------------------------------------------------------------------
+
+ ** First release.  Every function takes `'data'`, for the catalogue's
+    entries, or `'solid'`, for a `solid.Shape` of the part, plain or with
+    `'Detailed', true` its finer form.
+
+ ** Bearings: `parts.bearing.deepgroove`, single row deep groove ball
+    bearings of the series 618, 619, 60 and 62.
+
+ ** Screws: `parts.screw.cap`, `lowcap`, `countersunk`,
+    `raisedcountersunk`, `button`, `pan`, `cheese`, `hex`, `shoulder` and
+    `set`, to their ISO and DIN standards, in every drive their heads come
+    with, and REYHER's articles as data.
+
+ ** Nuts: `parts.nut.hex`, regular, thin and prevailing torque, coarse and
+    fine; `parts.nut.flange`, with a flange, plain or locking, ISO and EN.
+
+ ** `parts.washer.plain`, plain washers of the normal, small and large
+    series; `parts.ring.retaining`, retaining rings for shafts and bores,
+    with their grooves.
+
+ ** `parts.insert.heatset`, heat-set threaded inserts for 3D-printed parts,
+    M2 to M10, with the hole each needs.
+
+ ** `parts.dowel`, hardened parallel pins; `parts.key`, parallel keys with
+    their keyways; `parts.material`, the properties of seven engineering
+    materials.
